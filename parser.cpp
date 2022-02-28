@@ -101,31 +101,6 @@ file_info parse_header(ifstream & bgenfile, bool VERBOSE){
 	return(bgen_file_info);
 }
 
-BGEN_RETURN_CODE write_header(ofstream & bgenfile, file_info f_info){
-
-	// TBD: the header data needs to be calculated at the end as it contains numbers of variants and samples
-	// TBD: 
-
-	// Write basic header
-	try{
-	bgenfile.write((char *) &(f_info.header_offset), 4);
-	bgenfile.write((char *) &(f_info.size_of_header), 4);
-	bgenfile.write((char *) &(f_info.num_variants), 4);
-	bgenfile.write((char *) &(f_info.num_samples), 4);
-	bgenfile.write((char *) &(f_info.magic), 4);
-	bgenfile.write((char *) &(f_info.freedata), f_info.freedata_size);
-	bgenfile.write((char *) &(f_info.flags), 4);
-	}
-	catch (...) {
-		return(E_WRITE_ERROR);
-	}
-	// If sample info is present, write sampe identifier block
-
-
-	bgenfile.flush();
-	return(E_OK);
-}
-
 int main(int argc, char* argv[])
 {
 	bool VERBOSE=0;
@@ -139,7 +114,6 @@ int main(int argc, char* argv[])
     cout << bgen_finfo.flags << endl;
     cout << bgen_finfo.compression << endl;
 	ofstream out("C:/Users/jiaq8/OneDrive/FYP", ios :: out | ios :: binary);
-	write_header(out, bgen_finfo);
 	bgenfile.close();
 	exit(0);
 	unsigned short id_len;
