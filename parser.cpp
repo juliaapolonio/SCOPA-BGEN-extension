@@ -64,13 +64,13 @@ file_info parse_header(ifstream & bgenfile, bool VERBOSE){
 	if(VERBOSE){info("Magic number: ", magic);}
 	int freedata_size=0;
 	string freedata_s;
-	if(size_of_header-20>0){
-		freedata_size=size_of_header-20;
-		char freedata[freedata_size];
-		bgenfile.read(freedata, freedata_size);
-		if(VERBOSE){info("Free data detected: ", freedata);}
-		freedata_s=std::string(freedata);
-	}
+	// if(size_of_header-20>0){
+	// 	freedata_size=size_of_header-20;
+	// 	char freedata[freedata_size];
+	// 	bgenfile.read(freedata, freedata_size);
+	// 	if(VERBOSE){info("Free data detected: ", freedata);}
+	// 	freedata_s=std::string(freedata);
+	// }
 	uint32_t flags;
 	bgenfile.read(reinterpret_cast<char *>(&flags), sizeof(flags));
 	switch(flags & 3){
