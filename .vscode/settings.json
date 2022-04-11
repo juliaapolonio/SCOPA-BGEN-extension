@@ -4,5 +4,10 @@
         "ostream": "cpp",
         "fstream": "cpp",
         "string": "cpp"
+    },
+
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "C:/Users/jiaq8/vcpkg/scripts/buildsystems/vcpkg.cmake"
     }
 }
+
