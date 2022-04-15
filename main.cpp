@@ -511,6 +511,53 @@ readGenoFile(global & G, ofstream & LOG)
     }
     if (G.printBetas)BETAS << "MarkerName\tEffectAllele\tOtherAllele\tN\tModel\tModel_member\tbeta\tse\n";
 
+		// Try reading BGEN code here
+		if (G.inputGenFile.substr(G.inputGenFile.length()-4)=="bgen")
+		{
+			try{
+				string const filename = G.inputGenFile;
+				BgenParser bgenParser(filename) ;
+				bgenParser.summarise(cerr) ;
+				bgenParser.get_sample_ids(
+					[](string const& id ) {cout << "\t" << id ; }
+				) ;
+				string chromosome ;
+				uint32_t position ;
+				string rsid ;
+				vector<string> alleles ;
+				vector<vector<double>> probs ;
+
+		    while( bgenParser.read_variant( &chromosome, &position, &rsid, &alleles )){
+					std::cout << chromosome << ' ' << rsid << ' ' << position << ' ';
+					assert( alleles.size() > 0 ) ;
+					std::cout << alleles[0] << ' ' ;
+					for( std::size_t i = 1; i < alleles.size(); ++i ) {
+						std::cout << alleles[i] ;
+					}
+
+					// bgenParser.ignore_probs();
+					bgenParser.read_probs( &probs );
+					for( std::size_t i = 0; i < probs.size(); ++i ) {
+						std::cout << ' ' ;
+						for( std::size_t j = 0; j < probs[i].size(); ++j ) {
+							if( probs[i][j] == -1 ) {
+								std::cout << "." ;
+							} else {
+								std::cout << probs[i][j] << " ";
+							}
+						}
+					}
+					std::cout << '\n';
+				}
+
+				return 0;
+			}
+			catch( genfile::bgen::BGenError const& e ) {
+				std::cerr << "!! Uh-oh, error parsing bgen file.\n" ;
+				return -1 ;
+			}
+		}
+
 
     if (G.inputGenFile.substr(G.inputGenFile.length()-2)=="gz")
     {
