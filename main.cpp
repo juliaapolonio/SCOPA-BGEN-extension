@@ -511,42 +511,73 @@ readGenoFile(global & G, ofstream & LOG)
     }
     if (G.printBetas)BETAS << "MarkerName\tEffectAllele\tOtherAllele\tN\tModel\tModel_member\tbeta\tse\n";
 
-		// Try reading BGEN code here
+		// Try reading BGEN file
 		if (G.inputGenFile.substr(G.inputGenFile.length()-4)=="bgen")
 		{
 			try{
 				string const filename = G.inputGenFile;
 				BgenParser bgenParser(filename) ;
-				bgenParser.summarise(cerr) ;
+
+				// To be removed, for debugging
+				bgenParser.summarise(cerr) ; // summarise information about the bgen file
 				bgenParser.get_sample_ids(
 					[](string const& id ) {cout << "\t" << id ; }
-				) ;
+				) ; // print out all sample ids, if given
+
+				// To store what's given by the function read_variant()
 				string chromosome ;
 				uint32_t position ;
 				string rsid ;
 				vector<string> alleles ;
 				vector<vector<double>> probs ;
 
+				// Read information about each variant
 		    while( bgenParser.read_variant( &chromosome, &position, &rsid, &alleles )){
-					std::cout << chromosome << ' ' << rsid << ' ' << position << ' ';
+
+					// CHROMOSOME
+					int chr; // To be printed out in debug mode
+					if (chromosome=="MT") chr=26;
+					else if (chromosome=="XY") chr=25;
+					else if (chromosome=="Y" or chromosome == "0Y") chr=24; // Have to specify "0X" and "0Y" for some syntax variation
+					else if (chromosome=="X" or chromosome == "0X") chr=23;
+					else chr = atoi(chromosome.c_str());
+
+					if (G.chr)chr=G.chr;
+					if (G.debugMode) cout << "Chromosome id: " << chr;
+
+					// POSITION, MARKER
+					std::cout << chr << ' ' << rsid << ' ' << position << ' '; // To be removed
+					if (G.debugMode) cout << "Pos: " << position << "\nmarker:" << rsid;
+
+					// EFFECT & NON-EFFECT ALLELES
+					// To be removed
 					assert( alleles.size() > 0 ) ;
 					std::cout << alleles[0] << ' ' ;
 					for( std::size_t i = 1; i < alleles.size(); ++i ) {
 						std::cout << alleles[i] ;
 					}
 
-					// bgenParser.ignore_probs();
-					bgenParser.read_probs( &probs );
-					for( std::size_t i = 0; i < probs.size(); ++i ) {
-						std::cout << ' ' ;
-						for( std::size_t j = 0; j < probs[i].size(); ++j ) {
-							if( probs[i][j] == -1 ) {
-								std::cout << "." ;
-							} else {
-								std::cout << probs[i][j] << " ";
-							}
-						}
+					// Debug mode
+					string effectAllele;
+					string nonEffectAllele;
+					if (alleles.size() == 2){
+						effectAllele = alleles[1];
+						nonEffectAllele = alleles[0];
 					}
+					if (G.debugMode) cout << "\nea/nea:" << effectAllele <<"/" << nonEffectAllele<<"\n";
+
+					bgenParser.ignore_probs();
+					// bgenParser.read_probs( &probs );
+					// for( std::size_t i = 0; i < probs.size(); ++i ) {
+					// 	std::cout << ' ' ;
+					// 	for( std::size_t j = 0; j < probs[i].size(); ++j ) {
+					// 		if( probs[i][j] == -1 ) {
+					// 			std::cout << "." ;
+					// 		} else {
+					// 			std::cout << probs[i][j] << " ";
+					// 		}
+					// 	}
+					// }
 					std::cout << '\n';
 				}
 
