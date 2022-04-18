@@ -512,7 +512,7 @@ readGenoFile(global & G, ofstream & LOG)
     }
     if (G.printBetas)BETAS << "MarkerName\tEffectAllele\tOtherAllele\tN\tModel\tModel_member\tbeta\tse\n";
 
-		// Try reading BGEN file
+		// READING BGEN FILE
 		if (G.inputGenFile.substr(G.inputGenFile.length()-4)=="bgen")
 		{
 			try{
@@ -647,6 +647,37 @@ readGenoFile(global & G, ofstream & LOG)
 					cout << "\n";
 					cout << "fijeij: " << fijeij;
 					cout << '\n';
+
+					// MAF
+					double maf = 0;
+					if (aa+aA+AA>0)
+					{
+							maf = ((2*aa)+aA)/(2*(aa+aA+AA));
+
+					}
+					if (maf==0){infoscore=1;}
+					//info score calculation according to the measure in snptest:
+					//https://mathgen.stats.ox.ac.uk/genetics_software/snptest/snptest.v2.pdf
+					else
+					{
+							infoscore = 1-(fijeij/(2*(aa+aA+AA)*maf*(1-maf)));
+					}
+
+					bool firstIsMajorAllele = false;
+					if (maf>0.5)
+					{
+							maf=1-maf;
+							firstIsMajorAllele=true;
+							if (alleles.size() == 2){
+								effectAllele = alleles[0];
+								nonEffectAllele = alleles[1];
+							}
+					}
+					// To be removed
+					cout<<"MAF: "<< maf <<endl;
+
+					// Debug mode, keep
+					if (G.debugMode)cout<<"MAF: "<< maf <<endl;
 				}
 
 				return 0;
@@ -656,7 +687,6 @@ readGenoFile(global & G, ofstream & LOG)
 				return -1 ;
 			}
 		}
-
 
     if (G.inputGenFile.substr(G.inputGenFile.length()-2)=="gz")
     {
