@@ -690,13 +690,44 @@ readGenoFile(global & G, ofstream & LOG)
 										if (G.debugMode)cout << "Mainmatrix x: " << _rows << " y: " <<  _cols << endl;
 										matrixD _mainmatrix(_rows, _cols); //[0]-Y(0,1,2,3); [1]-.. X1,X2,X3...
 										int curind=0;
+										double probs_aa = 0; double probs_aA = 0; double probs_AA=0;
 
-									} //maf > 0 end (i think)
-					}
+										for( size_t i = 0; i < probs.size(); ++i ) {
+											// For each sample/individual, reset some variables
+
+											for( size_t j = 0; j < probs[i].size(); ++j ) {
+												if( probs[i][j] == -1 ) {
+													// Probability data unavailable
+												}
+												else{
+													switch (j) {
+														case 0:
+															probs_aa=probs[i][j];
+														case 1:
+															probs_aA=probs[i][j];
+														case 2:
+															probs_AA=probs[i][j];
+													}
+
+													if (firstIsMajorAllele){
+														_mainmatrix.put(curind,0,(2*(probs_aa)+probs_aA));
+													}
+													else{
+														_mainmatrix.put(curind,0,(2*(probs_AA)+probs_aA));
+													}
+													// for (int k=0; k<G.phenoList.size();k++){
+													// 	string xxy = G.samples[curind]._name;
+													// 	_mainmatrix.put(curind,k+1,G.samples[curind]._phenos[k]);
+													// }
+												}
+												curind++;
+										}
+									}
+								}
+					} //maf > 0 end (i think)
 				}
-
 				return 0;
-			}
+		}
 			catch( genfile::bgen::BGenError const& e ) {
 				std::cerr << "!! Uh-oh, error parsing bgen file.\n" ;
 				return -1 ;
