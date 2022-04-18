@@ -481,6 +481,7 @@ readSampleFile(global & G, ofstream & LOG)
             }
             lineNr++;
         }
+				// cout << "sample size: " << G.samples.size() << endl;
     }
     else
     {cout << "Cannot read sample file. Exit program!" << endl;exit(1);}
@@ -519,10 +520,13 @@ readGenoFile(global & G, ofstream & LOG)
 				BgenParser bgenParser(filename) ;
 
 				// To be removed, for debugging
-				bgenParser.summarise(cerr) ; // summarise information about the bgen file
-				bgenParser.get_sample_ids(
-					[](string const& id ) {cout << "\t" << id ; }
-				) ; // print out all sample ids, if given
+				// Summarise information about the bgen file
+				bgenParser.summarise(cerr) ;
+
+				// Print out all sample ids, if given
+				// bgenParser.get_sample_ids(
+				// 	[](string const& id ) {cout << "\t" << id ; }
+				// ) ;
 
 				// To store what's given by the function read_variant()
 				string chromosome ;
@@ -531,7 +535,7 @@ readGenoFile(global & G, ofstream & LOG)
 				vector<string> alleles ;
 				vector<vector<double>> probs ;
 
-				// Read information about each variant
+				// VARIANT
 		    while( bgenParser.read_variant( &chromosome, &position, &rsid, &alleles )){
 
 					// CHROMOSOME
@@ -566,19 +570,83 @@ readGenoFile(global & G, ofstream & LOG)
 					}
 					if (G.debugMode) cout << "\nea/nea:" << effectAllele <<"/" << nonEffectAllele<<"\n";
 
-					bgenParser.ignore_probs();
-					// bgenParser.read_probs( &probs );
-					// for( std::size_t i = 0; i < probs.size(); ++i ) {
-					// 	std::cout << ' ' ;
-					// 	for( std::size_t j = 0; j < probs[i].size(); ++j ) {
-					// 		if( probs[i][j] == -1 ) {
-					// 			std::cout << "." ;
-					// 		} else {
-					// 			std::cout << probs[i][j] << " ";
-					// 		}
-					// 	}
-					// }
-					std::cout << '\n';
+					// bgenParser.ignore_probs();
+
+					// PROBABILITIES
+					// Initialise variables
+					vector <double> gen;
+					vector <double> gen2;
+					int j = 0;
+					double aa=0; double aA=0; double AA=0;
+					double callrate=0; double ok_gen=0; double not_ok_gen=0;
+					double bestModel = 1e200;
+					string bestModelString = "";
+					string bestBetasString = "";
+					double fijeij = 0; //for infoscore
+					double infoscore = 1;
+					double gen2_pb_val = 0; double gen_pb_val = 0;
+					double eij = 0; double fij = 0;
+
+					// CALL RATE
+					// Read probability
+					bgenParser.read_probs( &probs );
+					for( size_t i = 0; i < probs.size(); ++i ) {
+
+						// For each sample/individual, reset some variables
+						cout << ' ' ; // To be removed
+						gen2_pb_val = 0;
+						gen_pb_val = 0;
+						eij = 0;
+						fij = 0;
+
+						for( size_t j = 0; j < probs[i].size(); ++j ) {
+							if( probs[i][j] == -1 ) {
+								cout << "." ; // Probability data unavailable
+							}
+							else{
+								cout << probs[i][j] << " "; // Probability data available
+
+								switch (j) {
+									case 0:
+									aa+=probs[i][j];
+									gen_pb_val+=2*(probs[i][j]);
+									case 1:
+									aA+=probs[i][j];
+									gen_pb_val+=(probs[i][j]);
+									gen2_pb_val+=(probs[i][j]);
+									eij+=probs[i][j];
+									fij+=probs[i][j];
+									case 2:
+									AA+=probs[i][j];
+									gen2_pb_val+=2*(probs[i][j]);
+									eij+=2*(probs[i][j]);
+									fij+=4*(probs[i][j]);
+								}
+							}
+						}
+
+						ok_gen++;
+						gen2.push_back(gen2_pb_val);
+						gen.push_back(gen_pb_val);
+						fijeij+= fij - (eij*eij);
+						j++; // what is this for?
+					}
+
+					if (ok_gen+not_ok_gen!=G.samples.size())
+					{
+							cout << "The number of samples in genotype file (" << ok_gen+not_ok_gen << ") does not match the number of samples in sample file (" << G.samples.size() << "). Exit program!" << endl;
+							exit (1);
+					}
+					callrate = ok_gen/(ok_gen+not_ok_gen);
+					if (G.debugMode)cout<<"Callrate: "<< callrate <<endl;
+
+					// Print to check, to be removed
+					cout << "aa: " << aa << " aA: " << aA << " AA: " << AA;
+					cout << "\n";
+					cout << "eij: " << eij << " fij: " << fij;
+					cout << "\n";
+					cout << "fijeij: " << fijeij;
+					cout << '\n';
 				}
 
 				return 0;
