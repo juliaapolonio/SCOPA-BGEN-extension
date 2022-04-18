@@ -648,7 +648,7 @@ readGenoFile(global & G, ofstream & LOG)
 					cout << "fijeij: " << fijeij;
 					cout << '\n';
 
-					// MAF
+					// MAF - MINOR ALLELE FREQUENCY
 					double maf = 0;
 					if (aa+aA+AA>0)
 					{
@@ -675,9 +675,24 @@ readGenoFile(global & G, ofstream & LOG)
 					}
 					// To be removed
 					cout<<"MAF: "<< maf <<endl;
-
 					// Debug mode, keep
 					if (G.debugMode)cout<<"MAF: "<< maf <<endl;
+
+					if (maf>0) //marker is ok - Sham'st thou to show thy dangerous brow by night, When evils are most free?
+					{
+								// INFO SCORE
+								infoscore = 1-(fijeij/(2*(aa+aA+AA)*maf*(1-maf)));
+
+								if (infoscore >= G.threshold)
+								{
+										unsigned int _rows = probs.size();
+										unsigned int _cols = (unsigned int) G.phenoList.size()+1;
+										if (G.debugMode)cout << "Mainmatrix x: " << _rows << " y: " <<  _cols << endl;
+										matrixD _mainmatrix(_rows, _cols); //[0]-Y(0,1,2,3); [1]-.. X1,X2,X3...
+										int curind=0;
+
+									} //maf > 0 end (i think)
+					}
 				}
 
 				return 0;
