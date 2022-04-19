@@ -648,7 +648,7 @@ readGenoFile(global & G, ofstream & LOG)
 					cout << "fijeij: " << fijeij;
 					cout << '\n';
 
-					// MAF
+					// MAF - MINOR ALLELE FREQUENCY
 					double maf = 0;
 					if (aa+aA+AA>0)
 					{
@@ -675,13 +675,156 @@ readGenoFile(global & G, ofstream & LOG)
 					}
 					// To be removed
 					cout<<"MAF: "<< maf <<endl;
-
 					// Debug mode, keep
 					if (G.debugMode)cout<<"MAF: "<< maf <<endl;
-				}
 
+					if (maf>0) //marker is ok - Sham'st thou to show thy dangerous brow by night, When evils are most free?
+					{
+								// INFO SCORE
+								infoscore = 1-(fijeij/(2*(aa+aA+AA)*maf*(1-maf)));
+
+								if (infoscore >= G.threshold)
+								{
+										unsigned int _rows = probs.size();
+										unsigned int _cols = (unsigned int) G.phenoList.size()+1;
+										if (G.debugMode)cout << "Mainmatrix x: " << _rows << " y: " <<  _cols << endl;
+										matrixD _mainmatrix(_rows, _cols); //[0]-Y(0,1,2,3); [1]-.. X1,X2,X3...
+										int curind=0;
+										double probs_aa = 0; double probs_aA = 0; double probs_AA=0;
+
+										for( size_t i = 0; i < probs.size(); ++i ) {
+											// For each sample/individual, reset some variables
+
+											for( size_t j = 0; j < probs[i].size(); ++j ) {
+												if( probs[i][j] == -1 ) {
+													// Probability data unavailable
+												}
+												else{
+													switch (j) {
+														case 0:
+															probs_aa=probs[i][j];
+														case 1:
+															probs_aA=probs[i][j];
+														case 2:
+															probs_AA=probs[i][j];
+													}
+
+													if (firstIsMajorAllele){
+														_mainmatrix.put(curind,0,(2*(probs_aa)+probs_aA));
+													}
+													else{
+														_mainmatrix.put(curind,0,(2*(probs_AA)+probs_aA));
+													}
+													// cout << "cols: " << _cols << endl;
+													// cout << "G.phenolist size: " << G.phenoList.size() << endl;
+
+													if (j == 2){
+														// ERROR: THIS CAUSES SEGMENTATION FAULT
+														// Make sure that this placement is correct
+														for (int k=0; k<G.phenoList.size();k++){
+															string xxy = G.samples[curind]._name;
+															_mainmatrix.put(curind,k+1,G.samples[curind]._phenos[k]);
+														}
+														curind++; // Make sure that this placement is correct - every 3
+													}
+
+												}
+										}
+									}
+
+									//We have main table now - lets run through all possible combinations of phenotypes
+									//if (G.debugMode)_mainmatrix.print();
+
+									int _testcount = pow(2,G.phenoList.size());
+									for (int test=_testcount-1; test>=1; test--)
+									{
+										int _phenoCount = 0;
+										int _sampleCount = 0;
+										vector<bool> phenoMask = phenoMasker(test,(int)G.phenoList.size());
+
+										if (G.debugMode)cout << "Current mask: ";
+										for (int i = 0; i < phenoMask.size(); i++)
+										{
+												if (phenoMask[i])
+												{
+														_phenoCount++;
+														if (G.debugMode)cout<<"1";
+												}
+												else{if (G.debugMode)cout<<"0";}
+										}
+										if (G.debugMode)cout << endl;
+
+										for (int i = 0; i<_mainmatrix.getRows(); i++)
+										{
+												bool indISOK = true;
+												if (G.debugMode){cout << G.samples[i]._name;}
+												if (_mainmatrix.get(i,0)==-9999){indISOK=false;}
+
+												for (int j = 1; j<_mainmatrix.getCols(); j++)
+												{
+
+														//phenotypes
+														if (phenoMask[j-1]){
+																//if (i==0)_phenoCount++;
+																if (_mainmatrix.get(i,j)==-9999){indISOK=false;}
+														}
+														if (G.debugMode){cout << " " << _mainmatrix.get(i,j);}
+
+												}
+												if (G.debugMode){cout << endl;}
+
+												if (indISOK)_sampleCount++;
+										}
+										if (G.debugMode)cout << "test: " << test << " indcount: " << _sampleCount << " phenocount: " <<   _phenoCount << endl;
+										arrayD *Y = new arrayD ( _sampleCount );
+										matrixD *X = new matrixD ( _sampleCount, _phenoCount+1);
+										arrayD *W = new arrayD ( _sampleCount );
+										int curInd = 0;
+										vector <double> COPYpheno;
+
+										for (int i = 0; i<_mainmatrix.getRows(); i++)
+										{
+												bool indISOK = true;
+												if (_mainmatrix.get(i,0)==-9999){indISOK=false;}
+												for (int j = 1; j<_mainmatrix.getCols(); j++)
+												{
+
+														if (phenoMask[j-1]){
+																//if (i==0)_phenoCount++;
+																if (_mainmatrix.get(i,j)==-9999){indISOK=false;}
+														}
+												}
+												if (indISOK)
+												{
+														int z=1;
+
+														//genotype
+														Y->put(curInd, _mainmatrix.get(i,0));
+														COPYpheno.push_back(_mainmatrix.get(i,0));
+
+														W->put(curInd,1);
+														X->put(curInd, 0,  1.0);
+
+														for (int j = 1; j<_mainmatrix.getCols(); j++)
+														{
+																if (phenoMask[j-1])
+																{
+																		X->put(curInd, z, _mainmatrix.get(i,j));
+																		z++;
+																}
+														}
+														curInd++;
+												}
+										}
+
+
+									}
+
+								}
+					} //maf > 0 end (i think)
+				}
 				return 0;
-			}
+		}
 			catch( genfile::bgen::BGenError const& e ) {
 				std::cerr << "!! Uh-oh, error parsing bgen file.\n" ;
 				return -1 ;
