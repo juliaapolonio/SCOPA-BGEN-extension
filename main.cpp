@@ -550,6 +550,8 @@ readGenoFile(global & G, ofstream & LOG)
 					if (G.debugMode) cout << "Chromosome id: " << chr;
 
 					// POSITION, MARKER
+					int pos =  (int) position;
+					string markerName = rsid;
 					std::cout << chr << ' ' << rsid << ' ' << position << ' '; // To be removed
 					if (G.debugMode) cout << "Pos: " << position << "\nmarker:" << rsid;
 
@@ -817,7 +819,182 @@ readGenoFile(global & G, ofstream & LOG)
 												}
 										}
 
+										lr LR;
+										try
+										{
+											if (LR.lr_w(Y, X, W) && test!=_testcount)
+											{
+												matrixD * C = LR.covariance;
+												C->InvertS();
+												double x;
+												for (int i=0; i<(unsigned int) _phenoCount;i++)
+														for (int j=0; j<(unsigned int) _phenoCount;j++)
+																x+=LR.Cstat->get(i)*LR.Cstat->get(j)*C->get(i,j);
+												double testLogLikelihood = -LR.getLnLk(Y, X, W)/2;
+												double nullLogLikelihood = -LR.nullLikelihood(COPYpheno)/2;
+												if (G.debugMode){cout << "Linear regression done with model: " << test << endl;}
 
+												for (int k = 0; k<=_phenoCount;k++)
+												{
+														double _pPheno = (1-studenttdistribution((_sampleCount*2) - _phenoCount,ddabs(LR.Cstat->get(k)/LR.SECstat->get(k))))*2;
+														if (G.debugMode){cout << k << "\t" << (_sampleCount*2) << "\t" << _phenoCount << "\t" << LR.Cstat->get(k) <<  "\t" << LR.SECstat->get(k) << "\t" << _pPheno << endl;}
+
+												}
+
+												double likelihoodRatio = 2 * (testLogLikelihood - nullLogLikelihood);
+												double _BIC = (-2 * testLogLikelihood) + ((_phenoCount+1) * log(_sampleCount));
+												double _BICnull = (-2 *nullLogLikelihood) + (log(_sampleCount));
+
+												double _pModel;
+												if (ddabs(likelihoodRatio)>0){_pModel = 1-chisquaredistribution(_phenoCount,ddabs(likelihoodRatio));}
+												else {_pModel = NAN;}
+
+												if (G.debugMode){cout << "Likelihood: " << testLogLikelihood << endl;}
+												if (G.debugMode){cout << "nullLikelihood: " << nullLogLikelihood << endl;}
+												if (G.debugMode){cout << "Model likelihood ratio: " << likelihoodRatio << endl;}
+												if (G.debugMode){cout << "Model p: " << _pModel << endl;}
+
+												std::stringstream line, line2;
+
+												if (_BIC < bestModel)
+												{
+
+														line << chr << "\t"<<  position << "\t" <<  rsid << "\t" << effectAllele <<"\t" << nonEffectAllele<< "\t" << infoscore << "\t" << HWE(aa,aA,AA) << "\t" <<maf << "\t" << _sampleCount << "\t";
+														if (firstIsMajorAllele){line << AA << "\t" << aA << "\t" << aa;}
+														else {line << aa << "\t" << aA << "\t" << AA;}
+														line << "\t" << _phenoCount << "\t";
+														for (int i = 0; i < phenoMask.size(); i++) {if (phenoMask[i]){line<<"1";}else{line<<"0";}}
+														line << "\t" << testLogLikelihood<<  "\t" <<  nullLogLikelihood <<
+														"\t" << likelihoodRatio << "\t" << _pModel << "\t" << _BIC << "\t" << _BICnull << "\t";
+														//bool phenostart = true;
+														//for (int i = 0; i < phenoMask.size(); i++) {if (phenoMask[i] && phenostart){line<<G.phenoList[i];phenostart=false;}else if(phenoMask[i]){line << "+" <<G.phenoList[i];}}
+														vector<string> phenosorter;
+														for (int i = 0; i < phenoMask.size(); i++){if(phenoMask[i])phenosorter.push_back(G.phenoList[i]);}
+														bool phenostart = true;
+														for (int i = 0; i < phenosorter.size(); i++) {if (phenostart){line<<phenosorter[i];phenostart=false;}else{line << "+" <<phenosorter[i];}}
+														line << "\t";
+														sort(phenosorter.begin(),phenosorter.end());
+														phenostart = true;
+														for (int i = 0; i < phenosorter.size(); i++) {if (phenostart){line<<phenosorter[i];phenostart=false;}else{line << "+" <<phenosorter[i];}}
+
+														if (G.printCovariance)
+														{
+																for (int i = 1; i < LR.Cstat->size() ;i++) line << "\t" << LR.Cstat->get(i) << "\t" <<LR.SECstat->get(i);
+																for (int i = 1; i < LR.Cstat->size();i++)
+																{
+																		for (int j = i; j < LR.Cstat->size();j++)
+																				line << "\t" << LR.covariance->get(i,j);
+																}
+														}
+														line << endl;
+														bestModelString = line.str();
+
+														int k=1;
+														for (int i = 0; i < phenoMask.size(); i++)
+														{
+																if (phenoMask[i])
+																{
+																		line2 << rsid << "\t" << effectAllele <<"\t" << nonEffectAllele<< "\t" <<  _sampleCount << "\t";
+																		bool phenostart = true;
+																		for (int j = 0; j < phenoMask.size(); j++)
+																		{
+																				if (phenoMask[j] && phenostart)
+																				{
+																						line2<<G.phenoList[j];
+																						phenostart=false;
+																				}
+																				else if(phenoMask[j])
+																				{
+																						line2 << "+" <<G.phenoList[j];
+																				}
+																		}
+																		line2  << "\t" << G.phenoList[i] << "\t" << LR.Cstat->get(k) << "\t" << LR.SECstat->get(k) << endl;
+																		k++;
+																}
+														}
+														bestBetasString = line2.str();
+														bestModel = _BIC;
+												}
+
+												if (G.printAll || G.printComplex)
+												{
+													OUT << chr << "\t"<<  pos << "\t" <<  markerName << "\t" << effectAllele <<"\t" << nonEffectAllele<< "\t" << infoscore << "\t" << HWE(aa,aA,AA) << "\t" <<maf << "\t" << _sampleCount << "\t";
+													if (firstIsMajorAllele){OUT << AA << "\t" << aA << "\t" << aa;}
+													else {OUT << aa << "\t" << aA << "\t" << AA;}
+
+													OUT << "\t" << _phenoCount << "\t";
+													for (int i = 0; i < phenoMask.size(); i++) {if (phenoMask[i]){OUT<<"1";}else{OUT<<"0";}}
+													OUT << "\t" << testLogLikelihood <<  "\t" <<  nullLogLikelihood <<
+													"\t" << likelihoodRatio << "\t" << _pModel << "\t" << _BIC << "\t" << _BICnull << "\t";
+
+													vector<string> phenosorter;
+													for (int i = 0; i < phenoMask.size(); i++){if(phenoMask[i])phenosorter.push_back(G.phenoList[i]);}
+													bool phenostart = true;
+													for (int i = 0; i < phenosorter.size(); i++) {if (phenostart){OUT<<phenosorter[i];phenostart=false;}else{OUT << "+" <<phenosorter[i];}}
+													OUT << "\t";
+													sort(phenosorter.begin(),phenosorter.end());
+													phenostart = true;
+													for (int i = 0; i < phenosorter.size(); i++) {if (phenostart){OUT<<phenosorter[i];phenostart=false;}else{OUT << "+" <<phenosorter[i];}}
+													if (G.printCovariance)
+													{
+															for (int i = 1; i < LR.Cstat->size() ;i++) OUT << "\t" << LR.Cstat->get(i) << "\t" <<LR.SECstat->get(i);
+															for (int i = 1; i < LR.Cstat->size();i++)
+															{
+																	for (int j = i; j < LR.Cstat->size();j++)
+																			OUT << "\t" << LR.covariance->get(i,j);
+															}
+													}
+
+													OUT << endl;
+
+													int k=1;
+													for (int i = 0; i < phenoMask.size(); i++)
+													{
+															if (phenoMask[i])
+															{
+																	if (G.printBetas) BETAS << markerName << "\t" << effectAllele <<"\t" << nonEffectAllele<< "\t" <<  _sampleCount << "\t";
+																	bool phenostart = true;
+																	for (int j = 0; j < phenoMask.size(); j++)
+																	{
+																			if (phenoMask[j] && phenostart)
+																			{
+																					if (G.printBetas) BETAS<<G.phenoList[j];
+																					phenostart=false;
+																			}
+																			else if(phenoMask[j])
+																			{
+																					if (G.printBetas) BETAS << "+" <<G.phenoList[j];
+																			}
+																	}
+																	if (G.printBetas) BETAS  << "\t" << G.phenoList[i] << "\t" << LR.Cstat->get(k) << "\t" << LR.SECstat->get(k) << endl;
+																	k++;
+															}
+													}
+												}
+
+											}
+											else
+											{
+													if (test!=_testcount) LOG << "Collinearity problem with model: " << chr << "\t"<<  pos << "\t" <<  markerName << "\t" << test << " " << _testcount << " ";
+													bool phenostart = true;
+													for (int i = 0; i < phenoMask.size(); i++) {if (phenoMask[i] && phenostart){LOG<<G.phenoList[i];phenostart=false;}else if(phenoMask[i]){LOG << "+" <<G.phenoList[i];}}
+													LOG << endl;
+											}
+										}
+										catch (ArgException &e)  // catch any exceptions
+										{ cerr << "error: " << e.error() << " for linear model " << e.argId() << endl; }
+
+										delete X;
+										delete Y;
+										delete W;
+										if (G.printComplex){break;}
+
+									}
+
+									if (!G.printAll && !G.printComplex)
+									{
+											if (G.printBetas)BETAS << bestBetasString;
+											OUT << bestModelString;
 									}
 
 								}
@@ -825,7 +1002,8 @@ readGenoFile(global & G, ofstream & LOG)
 				}
 				return 0;
 		}
-			catch( genfile::bgen::BGenError const& e ) {
+			catch( genfile::bgen::BGenError const& e )
+			{
 				std::cerr << "!! Uh-oh, error parsing bgen file.\n" ;
 				return -1 ;
 			}
