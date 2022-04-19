@@ -715,14 +715,111 @@ readGenoFile(global & G, ofstream & LOG)
 													else{
 														_mainmatrix.put(curind,0,(2*(probs_AA)+probs_aA));
 													}
-													// for (int k=0; k<G.phenoList.size();k++){
-													// 	string xxy = G.samples[curind]._name;
-													// 	_mainmatrix.put(curind,k+1,G.samples[curind]._phenos[k]);
-													// }
+													// cout << "cols: " << _cols << endl;
+													// cout << "G.phenolist size: " << G.phenoList.size() << endl;
+
+													if (j == 2){
+														// ERROR: THIS CAUSES SEGMENTATION FAULT
+														// Make sure that this placement is correct
+														for (int k=0; k<G.phenoList.size();k++){
+															string xxy = G.samples[curind]._name;
+															_mainmatrix.put(curind,k+1,G.samples[curind]._phenos[k]);
+														}
+														curind++; // Make sure that this placement is correct - every 3
+													}
+
 												}
-												curind++;
 										}
 									}
+
+									//We have main table now - lets run through all possible combinations of phenotypes
+									//if (G.debugMode)_mainmatrix.print();
+
+									int _testcount = pow(2,G.phenoList.size());
+									for (int test=_testcount-1; test>=1; test--)
+									{
+										int _phenoCount = 0;
+										int _sampleCount = 0;
+										vector<bool> phenoMask = phenoMasker(test,(int)G.phenoList.size());
+
+										if (G.debugMode)cout << "Current mask: ";
+										for (int i = 0; i < phenoMask.size(); i++)
+										{
+												if (phenoMask[i])
+												{
+														_phenoCount++;
+														if (G.debugMode)cout<<"1";
+												}
+												else{if (G.debugMode)cout<<"0";}
+										}
+										if (G.debugMode)cout << endl;
+
+										for (int i = 0; i<_mainmatrix.getRows(); i++)
+										{
+												bool indISOK = true;
+												if (G.debugMode){cout << G.samples[i]._name;}
+												if (_mainmatrix.get(i,0)==-9999){indISOK=false;}
+
+												for (int j = 1; j<_mainmatrix.getCols(); j++)
+												{
+
+														//phenotypes
+														if (phenoMask[j-1]){
+																//if (i==0)_phenoCount++;
+																if (_mainmatrix.get(i,j)==-9999){indISOK=false;}
+														}
+														if (G.debugMode){cout << " " << _mainmatrix.get(i,j);}
+
+												}
+												if (G.debugMode){cout << endl;}
+
+												if (indISOK)_sampleCount++;
+										}
+										if (G.debugMode)cout << "test: " << test << " indcount: " << _sampleCount << " phenocount: " <<   _phenoCount << endl;
+										arrayD *Y = new arrayD ( _sampleCount );
+										matrixD *X = new matrixD ( _sampleCount, _phenoCount+1);
+										arrayD *W = new arrayD ( _sampleCount );
+										int curInd = 0;
+										vector <double> COPYpheno;
+
+										for (int i = 0; i<_mainmatrix.getRows(); i++)
+										{
+												bool indISOK = true;
+												if (_mainmatrix.get(i,0)==-9999){indISOK=false;}
+												for (int j = 1; j<_mainmatrix.getCols(); j++)
+												{
+
+														if (phenoMask[j-1]){
+																//if (i==0)_phenoCount++;
+																if (_mainmatrix.get(i,j)==-9999){indISOK=false;}
+														}
+												}
+												if (indISOK)
+												{
+														int z=1;
+
+														//genotype
+														Y->put(curInd, _mainmatrix.get(i,0));
+														COPYpheno.push_back(_mainmatrix.get(i,0));
+
+														W->put(curInd,1);
+														X->put(curInd, 0,  1.0);
+
+														for (int j = 1; j<_mainmatrix.getCols(); j++)
+														{
+																if (phenoMask[j-1])
+																{
+																		X->put(curInd, z, _mainmatrix.get(i,j));
+																		z++;
+																}
+														}
+														curInd++;
+												}
+										}
+
+
+									}
+
 								}
 					} //maf > 0 end (i think)
 				}
