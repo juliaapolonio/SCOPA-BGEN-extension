@@ -368,8 +368,6 @@ int main (int argc,  char * argv[])
     return 0;
 }
 
-
-
 bool
 readExclFile(global & G, ofstream & LOG)
 {
@@ -397,7 +395,6 @@ readExclFile(global & G, ofstream & LOG)
     LOG << "Exclusion list contained: " << lineNr << " markers" << endl;
     return true;
 }
-
 
 bool
 readSampleFile(global & G, ofstream & LOG)
@@ -521,7 +518,7 @@ readGenoFile(global & G, ofstream & LOG)
 
 				// To be removed, for debugging
 				// Summarise information about the bgen file
-				bgenParser.summarise(cerr) ;
+				// bgenParser.summarise(cerr) ;
 
 				// Print out all sample ids, if given
 				// bgenParser.get_sample_ids(
@@ -1009,6 +1006,7 @@ readGenoFile(global & G, ofstream & LOG)
 			}
 		}
 
+		// READING GZ GEN FILE
     if (G.inputGenFile.substr(G.inputGenFile.length()-2)=="gz")
     {
         //      	ifstream F (G.inputGenFile.c_str());
@@ -1029,6 +1027,7 @@ readGenoFile(global & G, ofstream & LOG)
                     else if (uc(tokens[0])=="Y") chr=24;
                     else if (uc(tokens[0])=="X") chr=23;
                     else chr = atoi(tokens[0].c_str());
+
                     if (G.chr)chr=G.chr;
                     if (G.debugMode) cout << "Chromosome id: " << chr;
                     int pos = atoi(tokens[2].c_str());
@@ -1050,32 +1049,43 @@ readGenoFile(global & G, ofstream & LOG)
                     for (int i = 5; i < n-1; i+=3)
                     {
                         //granvil copypaste
+												// Calculate the probabilities of aa, aA, AA
                         aa+=atof(tokens[i].c_str());
                         aA+=atof(tokens[i+1].c_str());
                         AA+=atof(tokens[i+2].c_str());
+
+												// Calculate probabilities of each allele a & A
                         gen2.push_back(((atof(tokens[i+2].c_str())*2) + atof(tokens[i+1].c_str())));
                         gen.push_back(((atof(tokens[i].c_str())*2) + atof(tokens[i+1].c_str())));
+
+												// To count # of samples & call rate
                         ok_gen++;
+
+												// To calculate info score
                         double eij=(2*atof(tokens[i+2].c_str())) + atof(tokens[i+1].c_str());
                         double fij = (4*atof(tokens[i+2].c_str())) + atof(tokens[i+1].c_str());
                         fijeij+= fij - (eij*eij);
 
-
-
+												// Not sure what this is for
                         j++;
                     }
-                                        if (ok_gen+not_ok_gen!=G.samples.size())
+
+										// Make sure # of samples consistent in genotype & phenotype files
+                    if (ok_gen+not_ok_gen!=G.samples.size())
                     {
                         cout << "The number of samples in genotype file (" << ok_gen+not_ok_gen << ") does not match the number of samples in sample file (" << G.samples.size() << "). Exit program!" << endl;
                         exit (1);
                     }
+
+										// CALL RATE
                     callrate = ok_gen/(ok_gen+not_ok_gen);
                     if (G.debugMode)cout<<"Callrate: "<< callrate <<endl;
+
+										// MAF & INFO SCORE
                     double maf = 0;
                     if (aa+aA+AA>0)
                     {
                         maf = ((2*aa)+aA)/(2*(aa+aA+AA));
-
                     }
                     if (maf==0){infoscore=1;}
                     //info score calculation according to the measure in snptest:
@@ -1419,7 +1429,9 @@ readGenoFile(global & G, ofstream & LOG)
         }
 
     }
-    else
+
+		//READING GEN FILE
+    if (G.inputGenFile.substr(G.inputGenFile.length()-3)=="gen")
     {
         ifstream F (G.inputGenFile.c_str());
         if (F.is_open())
@@ -1430,22 +1442,40 @@ readGenoFile(global & G, ofstream & LOG)
                 vector<string> tokens;
                 getline (F,line);
                 string currentmarker = "";
-                int n = Tokenize(string(line), tokens, " ");            //tabulating file by space
+                int n = Tokenize(string(line), tokens, " ");	// Tabulating file by space
+
                 if (n>2 && !G.exclusionList[string(tokens[1])])
                 {
+										// CHROMOSOME
                     int chr;
                     if (uc(tokens[0])=="MT") chr=26;
                     else if (uc(tokens[0])=="XY") chr=25;
-                    else if (uc(tokens[0])=="Y") chr=24;
-                    else if (uc(tokens[0])=="X") chr=23;
+                    else if (uc(tokens[0])=="Y" or "0Y") chr=24;
+                    else if (uc(tokens[0])=="X" or "0X") chr=23;
                     else chr = atoi(tokens[0].c_str());
+
+										cout << "CHR: " << chr << endl; //debug
+
                     if (G.chr)chr=G.chr;
                     if (G.debugMode) cout << "Chromosome id: " << chr;
-                    int pos = atoi(tokens[2].c_str());
+
+										// MARKER NAME
                     string markerName = string(tokens[1]);
-                    char effectAllele = tokens[4][0];
-                    char nonEffectAllele = tokens[3][0];
+										cout << "MARKER: " << markerName << endl; //debug
+
+										// POSITION
+										int pos = atoi(tokens[3].c_str());
+										cout << "POSITION: " << pos << endl; //debug
+
+										// ALLELES
+                    char effectAllele = tokens[5][0];
+										cout << "EFFECT ALLELE: " << effectAllele << endl; //debug
+
+                    char nonEffectAllele = tokens[4][0];
+										cout << "NON EFFECT ALLELE: " << nonEffectAllele << endl; //debug
+
                     if (G.debugMode) cout << "Pos: " << pos << "\nmarker:" << markerName << "\nea/nea:" << effectAllele <<"/" << nonEffectAllele<<"\n";
+
 
                     vector <double> gen, gen2;
                     int j = 0;
@@ -1456,56 +1486,76 @@ readGenoFile(global & G, ofstream & LOG)
                     string bestBetasString = "";
                     double fijeij = 0; //for infoscore
                     double infoscore = 1;
-                    for (int i = 5; i < n-1; i+=3)
+
+										// for (int i=6; i<9; i++){
+										// 	cout << tokens[i] << " ";
+										// }
+										// cout << endl;
+
+										// Last 3 probabilities
+										// cout << tokens[n-3] << endl;
+										// cout << tokens[n-2] << endl;
+										// cout << tokens[n-1] << endl;
+
+                    for (int i = 6; i < n; i+=3)
                     {
                         //granvil copypaste
                         aa+=atof(tokens[i].c_str());
                         aA+=atof(tokens[i+1].c_str());
                         AA+=atof(tokens[i+2].c_str());
+
                         gen2.push_back(((atof(tokens[i+2].c_str())*2) + atof(tokens[i+1].c_str())));
                         gen.push_back(((atof(tokens[i].c_str())*2) + atof(tokens[i+1].c_str())));
+
                         ok_gen++;
+
                         double eij=(2*atof(tokens[i+2].c_str())) + atof(tokens[i+1].c_str());
                         double fij = (4*atof(tokens[i+2].c_str())) + atof(tokens[i+1].c_str());
                         fijeij+= fij - (eij*eij);
-
-
-
                         j++;
                     }
+
                     if (ok_gen+not_ok_gen!=G.samples.size())
                     {
                         cout << "The number of samples in genotype file (" << ok_gen+not_ok_gen << ") does not match the number of samples in sample file (" << G.samples.size() << "). Exit program!" << endl;
                         exit (1);
                     }
+
                     callrate = ok_gen/(ok_gen+not_ok_gen);
                     if (G.debugMode)cout<<"Callrate: "<< callrate <<endl;
+
                     double maf = 0;
                     if (aa+aA+AA>0)
                     {
                         maf = ((2*aa)+aA)/(2*(aa+aA+AA));
-
                     }
                     bool firstIsMajorAllele = false;
                     if (maf>0.5)
                     {
                         maf=1-maf;
                         firstIsMajorAllele=true;
-                        effectAllele = tokens[3][0];
-                        nonEffectAllele = tokens[4][0];
+                        effectAllele = tokens[4][0];
+                        nonEffectAllele = tokens[5][0];
                     }
                     if (G.debugMode)cout<<"MAF: "<< maf <<endl;
+										cout << "MAF: " << maf << endl; //debug
+										cout << "INFO SCORE 1: " << infoscore << endl; //debug
                     if (maf>0) //marker is ok - Sham'st thou to show thy dangerous brow by night, When evils are most free?
                     {
                         infoscore = 1-(fijeij/(2*(aa+aA+AA)*maf*(1-maf)));
+												cout << "FIJEIJ: " << fijeij << endl; //debug
+												cout << "aa: " << aa << " aA: " << aA << " AA: " << AA << endl; //debug
+												cout << "MAF: " << maf << endl; //debug
+												cout << "INFO SCORE 2: " << infoscore << endl; //debug
+
                         if (infoscore>=G.threshold)
                         {
-                            unsigned int _rows = (n-5)/3;
+                            unsigned int _rows = (n-6)/3;
                             unsigned int _cols = (unsigned int) G.phenoList.size()+1;
                             if (G.debugMode)cout << "Mainmatrix x: " << _rows << " y: " <<  _cols << endl;
                             matrixD _mainmatrix(_rows, _cols); //[0]-Y(0,1,2,3); [1]-.. X1,X2,X3...
                             int curind=0;
-                            for (int i = 5; i < n-1; i+=3)
+                            for (int i = 6; i < n-1; i+=3)
                             {
                                 if (firstIsMajorAllele)
                                 {
@@ -1514,18 +1564,18 @@ readGenoFile(global & G, ofstream & LOG)
                                 else
                                 {
                                     _mainmatrix.put(curind,0,((atof(tokens[i+2].c_str())*2) + atof(tokens[i+1].c_str())));
-
                                 }
+
                                 for (int j = 0; j<G.phenoList.size(); j++)
                                 {
                                     string xxy = G.samples[curind]._name;
                                     //     int xxyy = j;
                                     //   double xxx = G.samples[curind]._phenos[j];
-
                                     _mainmatrix.put(curind,j+1,G.samples[curind]._phenos[j]);
                                 }
                                 curind++;
                             }
+
                             //We have main table now - lets run through all possible combinations of phenotypes
                             //if (G.debugMode)_mainmatrix.print();
                             int _testcount = pow(2,G.phenoList.size());
@@ -1546,7 +1596,6 @@ readGenoFile(global & G, ofstream & LOG)
                                     else{if (G.debugMode)cout<<"0";}
                                 }
                                 if (G.debugMode)cout << endl;
-
 
                                 for (int i = 0; i<_mainmatrix.getRows(); i++)
                                 {
