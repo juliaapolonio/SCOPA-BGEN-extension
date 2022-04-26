@@ -257,6 +257,7 @@ private:
 } ;
 
 
+
 double ddabs(double d){if(d<0)return d*-1;return d;}
 bool readSampleFile(global & G, ofstream & LOG);
 bool readGenoFile(global & G, ofstream & LOG);
@@ -589,47 +590,69 @@ readGenoFile(global & G, ofstream & LOG)
 					// CALL RATE
 					// Read probability
 					bgenParser.read_probs( &probs );
-					for( size_t i = 0; i < probs.size(); ++i ) {
-
-						// For each sample/individual, reset some variables
-						cout << ' ' ; // To be removed
-						gen2_pb_val = 0;
-						gen_pb_val = 0;
-						eij = 0;
-						fij = 0;
-
-						for( size_t j = 0; j < probs[i].size(); ++j ) {
-							if( probs[i][j] == -1 ) {
-								cout << "." ; // Probability data unavailable
+					// size_t j = 0;
+					for (size_t i = 0; i < probs.size(); ++i)
+					{
+							//granvil copypaste
+							if(probs[i][0]+probs[i][1]+probs[i][2] == 1){
+								aa+=probs[i][0];
+								aA+=probs[i][1];
+								AA+=probs[i][2];
 							}
-							else{
-								cout << probs[i][j] << " "; // Probability data available
 
-								switch (j) {
-									case 0:
-									aa+=probs[i][j];
-									gen_pb_val+=2*(probs[i][j]);
-									case 1:
-									aA+=probs[i][j];
-									gen_pb_val+=(probs[i][j]);
-									gen2_pb_val+=(probs[i][j]);
-									eij+=probs[i][j];
-									fij+=probs[i][j];
-									case 2:
-									AA+=probs[i][j];
-									gen2_pb_val+=2*(probs[i][j]);
-									eij+=2*(probs[i][j]);
-									fij+=4*(probs[i][j]);
-								}
-							}
-						}
 
-						ok_gen++;
-						gen2.push_back(gen2_pb_val);
-						gen.push_back(gen_pb_val);
-						fijeij+= fij - (eij*eij);
-						j++; // what is this for?
+							gen2.push_back((((probs[i][2])*2) + (probs[i][1])));
+							gen.push_back(((probs[i][0]*2) + (probs[i][1])));
+
+							ok_gen++;
+
+							double eij=(2*(probs[i][2])) + (probs[i][1]);
+							double fij = (4*(probs[i][2])) + (probs[i][1]);
+							fijeij+= fij - (eij*eij);
 					}
+					cout << "aa: " << aa << " aA: "<< aA << " AA: " << AA << endl;
+
+					// for( size_t i = 0; i < probs.size(); ++i ) {
+					//
+					// 	// For each sample/individual, reset some variables
+					// 	cout << ' ' ; // To be removed
+					// 	gen2_pb_val = 0;
+					// 	gen_pb_val = 0;
+					// 	eij = 0;
+					// 	fij = 0;
+
+					// 	for( size_t j = 0; j < probs[i].size(); ++j ) {
+					// 		if( probs[i][j] == -1 ) {
+					// 			cout << "." ; // Probability data unavailable
+					// 		}
+					// 		else{
+					// 			cout << probs[i][j] << " "; // Probability data available
+					//
+					// 			switch (j) {
+					// 				case 0:
+					// 				aa+=probs[i][j];
+					// 				gen_pb_val+=2*(probs[i][j]);
+					// 				case 1:
+					// 				aA+=probs[i][j];
+					// 				gen_pb_val+=(probs[i][j]);
+					// 				gen2_pb_val+=(probs[i][j]);
+					// 				eij+=probs[i][j];
+					// 				fij+=probs[i][j];
+					// 				case 2:
+					// 				AA+=probs[i][j];
+					// 				gen2_pb_val+=2*(probs[i][j]);
+					// 				eij+=2*(probs[i][j]);
+					// 				fij+=4*(probs[i][j]);
+					// 			}
+					// 		}
+					// 	}
+					//
+					// 	ok_gen++;
+					// 	gen2.push_back(gen2_pb_val);
+					// 	gen.push_back(gen_pb_val);
+					// 	fijeij+= fij - (eij*eij);
+					// 	j++; // what is this for?
+					// }
 
 					if (ok_gen+not_ok_gen!=G.samples.size())
 					{
@@ -690,6 +713,31 @@ readGenoFile(global & G, ofstream & LOG)
 										matrixD _mainmatrix(_rows, _cols); //[0]-Y(0,1,2,3); [1]-.. X1,X2,X3...
 										int curind=0;
 										double probs_aa = 0; double probs_aA = 0; double probs_AA=0;
+
+										// for (size_t i = 0; i < probs.size(); i++)
+										// {
+										// 		// //granvil copypaste
+										// 		// aa+=probs[i][0];
+										// 		// aA+=probs[i][1];
+										// 		// AA+=probs[i][2];
+										//
+										// 		if (firstIsMajorAllele)
+										// 		{
+										// 				// _mainmatrix.put(curind,0,((atof(tokens[i].c_str())*2) + atof(tokens[i+1].c_str())));
+										// 				_mainmatrix.put(curind,0,(probs[i][0]*2 + probs[i][1]));
+										// 		}
+										// 		else
+										// 		{
+										// 				// _mainmatrix.put(curind,0,((atof(tokens[i+2].c_str())*2) + atof(tokens[i+1].c_str())));
+										// 				_mainmatrix.put(curind,0,(probs[i][2]*2 + probs[i][1]));
+										// 		}
+										//
+										// 		for (int k=0; k<G.phenoList.size();k++){
+										// 			string xxy = G.samples[curind]._name;
+										// 			_mainmatrix.put(curind,k+1,G.samples[curind]._phenos[k]);
+										// 		}
+										// 		curind++;
+										// }
 
 										for( size_t i = 0; i < probs.size(); ++i ) {
 											// For each sample/individual, reset some variables
@@ -1477,6 +1525,7 @@ readGenoFile(global & G, ofstream & LOG)
                     if (G.debugMode) cout << "Pos: " << pos << "\nmarker:" << markerName << "\nea/nea:" << effectAllele <<"/" << nonEffectAllele<<"\n";
 
 
+
                     vector <double> gen, gen2;
                     int j = 0;
                     double aa=0; double aA=0; double AA=0;
@@ -1486,16 +1535,6 @@ readGenoFile(global & G, ofstream & LOG)
                     string bestBetasString = "";
                     double fijeij = 0; //for infoscore
                     double infoscore = 1;
-
-										// for (int i=6; i<9; i++){
-										// 	cout << tokens[i] << " ";
-										// }
-										// cout << endl;
-
-										// Last 3 probabilities
-										// cout << tokens[n-3] << endl;
-										// cout << tokens[n-2] << endl;
-										// cout << tokens[n-1] << endl;
 
                     for (int i = 6; i < n; i+=3)
                     {
