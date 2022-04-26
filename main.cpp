@@ -598,17 +598,20 @@ readGenoFile(global & G, ofstream & LOG)
 								aa+=probs[i][0];
 								aA+=probs[i][1];
 								AA+=probs[i][2];
+
+								gen2.push_back((((probs[i][2])*2) + (probs[i][1])));
+								gen.push_back(((probs[i][0]*2) + (probs[i][1])));
+
+								ok_gen++;
+
+								double eij=(2*(probs[i][2])) + (probs[i][1]);
+								double fij = (4*(probs[i][2])) + (probs[i][1]);
+								fijeij+= fij - (eij*eij);
+
 							}
-
-
-							gen2.push_back((((probs[i][2])*2) + (probs[i][1])));
-							gen.push_back(((probs[i][0]*2) + (probs[i][1])));
-
-							ok_gen++;
-
-							double eij=(2*(probs[i][2])) + (probs[i][1]);
-							double fij = (4*(probs[i][2])) + (probs[i][1]);
-							fijeij+= fij - (eij*eij);
+							else{
+								not_ok_gen++;
+							}
 					}
 					cout << "aa: " << aa << " aA: "<< aA << " AA: " << AA << endl;
 
@@ -677,6 +680,7 @@ readGenoFile(global & G, ofstream & LOG)
 							maf = ((2*aa)+aA)/(2*(aa+aA+AA));
 
 					}
+					cout << "MAF: " << maf << endl;
 					if (maf==0){infoscore=1;}
 					//info score calculation according to the measure in snptest:
 					//https://mathgen.stats.ox.ac.uk/genetics_software/snptest/snptest.v2.pdf
@@ -1568,6 +1572,15 @@ readGenoFile(global & G, ofstream & LOG)
                     {
                         maf = ((2*aa)+aA)/(2*(aa+aA+AA));
                     }
+
+										if (maf==0){infoscore=1;}
+                    //info score calculation according to the measure in snptest:
+                    //https://mathgen.stats.ox.ac.uk/genetics_software/snptest/snptest.v2.pdf
+                    else
+                    {
+                        infoscore = 1-(fijeij/(2*(aa+aA+AA)*maf*(1-maf)));
+                    }
+
                     bool firstIsMajorAllele = false;
                     if (maf>0.5)
                     {
