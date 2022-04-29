@@ -606,48 +606,6 @@ readGenoFile(global & G, ofstream & LOG)
 					}
 					cout << "aa: " << aa << " aA: "<< aA << " AA: " << AA << endl;
 
-					// for( size_t i = 0; i < probs.size(); ++i ) {
-					//
-					// 	// For each sample/individual, reset some variables
-					// 	cout << ' ' ; // To be removed
-					// 	gen2_pb_val = 0;
-					// 	gen_pb_val = 0;
-					// 	eij = 0;
-					// 	fij = 0;
-
-					// 	for( size_t j = 0; j < probs[i].size(); ++j ) {
-					// 		if( probs[i][j] == -1 ) {
-					// 			cout << "." ; // Probability data unavailable
-					// 		}
-					// 		else{
-					// 			cout << probs[i][j] << " "; // Probability data available
-					//
-					// 			switch (j) {
-					// 				case 0:
-					// 				aa+=probs[i][j];
-					// 				gen_pb_val+=2*(probs[i][j]);
-					// 				case 1:
-					// 				aA+=probs[i][j];
-					// 				gen_pb_val+=(probs[i][j]);
-					// 				gen2_pb_val+=(probs[i][j]);
-					// 				eij+=probs[i][j];
-					// 				fij+=probs[i][j];
-					// 				case 2:
-					// 				AA+=probs[i][j];
-					// 				gen2_pb_val+=2*(probs[i][j]);
-					// 				eij+=2*(probs[i][j]);
-					// 				fij+=4*(probs[i][j]);
-					// 			}
-					// 		}
-					// 	}
-					//
-					// 	ok_gen++;
-					// 	gen2.push_back(gen2_pb_val);
-					// 	gen.push_back(gen_pb_val);
-					// 	fijeij+= fij - (eij*eij);
-					// 	j++; // what is this for?
-					// }
-
 					if (ok_gen+not_ok_gen!=G.samples.size())
 					{
 							cout << "The number of samples in genotype file (" << ok_gen+not_ok_gen << ") does not match the number of samples in sample file (" << G.samples.size() << "). Exit program!" << endl;
@@ -659,10 +617,6 @@ readGenoFile(global & G, ofstream & LOG)
 					// Print to check, to be removed
 					cout << "aa: " << aa << " aA: " << aA << " AA: " << AA;
 					cout << "\n";
-					cout << "eij: " << eij << " fij: " << fij;
-					cout << "\n";
-					cout << "fijeij: " << fijeij;
-					cout << '\n';
 
 					// MAF - MINOR ALLELE FREQUENCY
 					double maf = 0;
@@ -710,82 +664,35 @@ readGenoFile(global & G, ofstream & LOG)
 
 										matrixD _mainmatrix(_rows, _cols); //[0]-Y(0,1,2,3); [1]-.. X1,X2,X3...
 										int curind=0;
-										double probs_aa = 0; double probs_aA = 0; double probs_AA=0;
-
-										cout << "PROBS SIZE: " << probs.size() << endl;
-
-										for( size_t i = 0; i < probs.size(); ++i ) {
-											// For each sample/individual, reset some variables
-
-											for( size_t j = 0; j < probs[i].size(); ++j ) {
-
-												if( probs[i][j] == -1 ) {
-													// Probability data unavailable
+										for (int i = 0; i < probs.size(); i++) // For each sample (triplet of probabilities)
+										{
+											if( probs[i][j] == -1 ) {}
+											else{
+												// DEPOSIT THE MAJOR ALLELE FREQUENCY IN THE RESPECTIVE SAMPLE ROW & FIRST COLUMN
+												if (firstIsMajorAllele)
+												{
+														_mainmatrix.put(curind,0,2*probs[i][0]+probs[i][1]);
 												}
-												else{
-													switch (j) {
-														case 0:
-															probs_aa=probs[i][j];
-														case 1:
-															probs_aA=probs[i][j];
-														case 2:
-															probs_AA=probs[i][j];
-													}
-
-													// if (firstIsMajorAllele){
-													// 	_mainmatrix.put(curind,0,(2*(probs_aa)+probs_aA));
-													// }
-													// else{
-													// 	_mainmatrix.put(curind,0,(2*(probs_AA)+probs_aA));
-													// }
-
-													if (j == 2){
-
-														if (firstIsMajorAllele){
-															_mainmatrix.put(curind,0,(2*(probs_aa)+probs_aA));
-														}
-														else{
-															_mainmatrix.put(curind,0,(2*(probs_AA)+probs_aA));
-														}
-
-														// ERROR: THIS CAUSES SEGMENTATION FAULT
-														// Make sure that this placement is correct
-														for (int k=0; k<G.phenoList.size();k++){
-															string xxy = G.samples[curind]._name;
-															_mainmatrix.put(curind,k+1,G.samples[curind]._phenos[k]);
-														}
-														curind++; // Make sure that this placement is correct - every 3
-													}
-
-
+												else
+												{
+														_mainmatrix.put(curind,0,2*probs[i][2]+probs[i][1]);
 												}
+											}
+												// FOR EACH PHENOTYPE
+												for (int j = 0; j<G.phenoList.size(); j++)
+												{
+														string xxy = G.samples[curind]._name; // PHENOTYPE
+														_mainmatrix.put(curind,j+1,G.samples[curind]._phenos[j]); // THE NEXT 2 OR MORE COLUMNS CONTAIN THE VALUES OF THE PHENOTYPES
+												}
+
+												// MOVE TO THE NEXT SAMPLE
+												curind++;
+
 										}
-									}
-
-									// BUG
-
-									probs_aa=probs[499][0];
-									probs_aA=probs[499][1];
-									probs_AA=probs[499][2];
-									if (firstIsMajorAllele)
-									{
-											_mainmatrix.put(499,0,(2*(probs_aa)+probs_aA));
-									}
-									else
-									{
-											_mainmatrix.put(499,0,(2*(probs_AA)+probs_aA));
-
-									}
-									for (int j = 0; j<G.phenoList.size(); j++)
-									{
-											string xxy = G.samples[499]._name;
-											_mainmatrix.put(499,j+1,G.samples[curind]._phenos[j]);
-									}
 									_mainmatrix.print();
 
 									//We have main table now - lets run through all possible combinations of phenotypes
 									//if (G.debugMode)_mainmatrix.print();
-
 									int _testcount = pow(2,G.phenoList.size());
 									cout << "TEST COUNT: " << _testcount << endl;
 									for (int test=_testcount-1; test>=1; test--)
@@ -917,8 +824,8 @@ readGenoFile(global & G, ofstream & LOG)
 
 										}
 
-										for (int xxx=0; xxx<COPYpheno.size(); xxx++)cout<< COPYpheno[xxx];
-										   cout <<endl; // Same up until here
+										// for (int xxx=0; xxx<COPYpheno.size(); xxx++)cout<< COPYpheno[xxx];
+										//    cout <<endl; // Same up until here
 
 										lr LR;
 										try
@@ -1275,7 +1182,7 @@ readGenoFile(global & G, ofstream & LOG)
 																// MOVE TO THE NEXT SAMPLE
                                 curind++;
                             }
-														_mainmatrix.print(); // TO BE COMMENTED OUT
+														// _mainmatrix.print(); // TO BE COMMENTED OUT
 
 														// MAIN MATRIX READY FOR ANALYSIS
                             	//We have main table now - lets run through all possible combinations of phenotypes
@@ -1321,7 +1228,7 @@ readGenoFile(global & G, ofstream & LOG)
                                 }
 
                                 if (G.debugMode)cout << "test: " << test << " indcount: " << _sampleCount << " phenocount: " <<   _phenoCount << endl;
-																cout << "test: " << test << " indcount: " << _sampleCount << " phenocount: " <<   _phenoCount << endl;
+																// cout << "test: " << test << " indcount: " << _sampleCount << " phenocount: " <<   _phenoCount << endl;
 
 																// CREATE NEW MATRICES (?)
                                 arrayD *Y = new arrayD ( _sampleCount );
@@ -1378,40 +1285,60 @@ readGenoFile(global & G, ofstream & LOG)
                                 //    cout <<endl;
                                 // }
 
-																for (int xxx=0; xxx<COPYpheno.size(); xxx++)cout<< COPYpheno[xxx];
-																   cout <<endl; // Something different before this
+																// for (int xxx=0; xxx<COPYpheno.size(); xxx++)cout<< COPYpheno[xxx];
+																//    cout <<endl; // Something different before this
 
 																// LINEAR REGRESSION
                                 lr LR;
-                                try {
+                                try
+																{
+																		// PERFORM WEIGHTED LINEAR REGRESSION WITH Y,X,W
+																				// Y[j]   = j-th observed data point
+																				// X[i,j] = j-th value of the i-th independent varialble
+																				// W[j]   = j-th weight value
+
                                     if (LR.lr_w(Y, X, W) && test!=_testcount)
                                     {
+																				// COVARIANCE
                                         matrixD * C = LR.covariance;
+
+																				// INVERTED COVARIANCE
                                         C->InvertS();
+
                                         double x;
                                         for (int i=0; i<(unsigned int) _phenoCount;i++)
                                             for (int j=0; j<(unsigned int) _phenoCount;j++)
                                                 x+=LR.Cstat->get(i)*LR.Cstat->get(j)*C->get(i,j);
+
+																				// LOGLIKELIHOOD - TEST & NULL
                                         double testLogLikelihood = -LR.getLnLk(Y, X, W)/2;
                                         double nullLogLikelihood = -LR.nullLikelihood(COPYpheno)/2;
                                         if (G.debugMode){cout << "Linear regression done with model: " << test << endl;}
+
+																				// FOR EACH PHENOTYPE -> p value for this phenotype or combination of phenotypes?
                                         for (int k = 0; k<=_phenoCount;k++)
                                         {
                                             double _pPheno = (1-studenttdistribution((_sampleCount) - _phenoCount,ddabs(LR.Cstat->get(k)/LR.SECstat->get(k))))*2;
                                             if (G.debugMode){cout << k << "\t" << (_sampleCount) << "\t" << _phenoCount << "\t" << LR.Cstat->get(k) <<  "\t" << LR.SECstat->get(k) << "\t" << _pPheno << endl;}
-
                                         }
+
+																				// LIKELIHOOD RATIO
                                         double likelihoodRatio = 2 * (testLogLikelihood - nullLogLikelihood);
+
+																				// BIC and BIC NULL
                                         double _BIC = (-2 * testLogLikelihood) + ((_phenoCount+1) * log(_sampleCount));
                                         double _BICnull = (-2 *nullLogLikelihood) + (log(_sampleCount));
                                         //double _pModel = gsl_cdf_chisq_Q( likelihoodRatio , _phenoCount); // Overall P value - need to figure out the number of df!!!!!
-                                        double _pModel;
+
+																				// P MODEL
+																				double _pModel;
                                         if (ddabs(likelihoodRatio)>0){_pModel = 1-chisquaredistribution(_phenoCount,ddabs(likelihoodRatio));}
                                         else {_pModel = NAN;}
+
                                         if (G.debugMode){cout << "Likelihood: " << testLogLikelihood << endl;}
                                         if (G.debugMode){cout << "nullLikelihood: " << nullLogLikelihood << endl;}
                                         if (G.debugMode){cout << "Model likelihood ratio: " << likelihoodRatio << endl;}
-                                            if (G.debugMode){cout << "Model p: " << _pModel << endl;}
+                                        if (G.debugMode){cout << "Model p: " << _pModel << endl;}
                                         if (G.debugMode){LR.covariance->print();}
 
                                         /*
@@ -1423,20 +1350,28 @@ readGenoFile(global & G, ofstream & LOG)
                                         for (int i = 0; i < phenoMask.size(); i++) {if (phenoMask[i] && phenostart){cout<<G.phenoList[i];phenostart=false;}else if(phenoMask[i]){cout << "+" <<G.phenoList[i];}}
                                         cout << endl;
                                         */
-                                        std::stringstream line, line2;
-                                        if (_BIC < bestModel)
-                                        {
 
+																				// PRINT OUT RESULTS
+                                        std::stringstream line, line2;
+
+																				// BAYESIAN INFORMATION SCORE
+                                        if (_BIC < bestModel)
+																				{
                                             line << chr << "\t"<<  pos << "\t" <<  markerName << "\t" << effectAllele <<"\t" << nonEffectAllele<< "\t" << infoscore << "\t" << HWE(aa,aA,AA) << "\t" <<maf << "\t" << _sampleCount << "\t";
-                                            if (firstIsMajorAllele){line << AA << "\t" << aA << "\t" << aa;}
+																						if (firstIsMajorAllele){line << AA << "\t" << aA << "\t" << aa;}
                                             else {line << aa << "\t" << aA << "\t" << AA;}
+
                                             line << "\t" << _phenoCount << "\t";
+
                                             for (int i = 0; i < phenoMask.size(); i++) {if (phenoMask[i]){line<<"1";}else{line<<"0";}}
+
                                             line << "\t" << testLogLikelihood<<  "\t" <<  nullLogLikelihood <<
                                             "\t" << likelihoodRatio << "\t" << _pModel << "\t" << _BIC << "\t" << _BICnull << "\t";
+
                                             //bool phenostart = true;
                                             //for (int i = 0; i < phenoMask.size(); i++) {if (phenoMask[i] && phenostart){line<<G.phenoList[i];phenostart=false;}else if(phenoMask[i]){line << "+" <<G.phenoList[i];}}
-                                            vector<string> phenosorter;
+
+																						vector<string> phenosorter;
                                             for (int i = 0; i < phenoMask.size(); i++){if(phenoMask[i])phenosorter.push_back(G.phenoList[i]);}
                                             bool phenostart = true;
                                             for (int i = 0; i < phenosorter.size(); i++) {if (phenostart){line<<phenosorter[i];phenostart=false;}else{line << "+" <<phenosorter[i];}}
@@ -1541,7 +1476,7 @@ readGenoFile(global & G, ofstream & LOG)
                                             }
                                         }
 
-                                        /*else if ((LR.getLnLk(Y, X, W) <= (-2 * nullLikelihood(COPYpheno))) && ((-2 * nullLikelihood(COPYpheno)) > bestModel))
+                                      	/*else if ((LR.getLnLk(Y, X, W) <= (-2 * nullLikelihood(COPYpheno))) && ((-2 * nullLikelihood(COPYpheno)) > bestModel))
                                         {
                                             line << chr << "\t"<<  pos << "\t" <<  markerName << "\t" << effectAllele <<"\t" << nonEffectAllele<< "\t" << 0 << "\t";
                                             for (int i = 0; i < phenoMask.size(); i++) {if (phenoMask[i]){line<<"0";}else{line<<"0";}}
@@ -1550,10 +1485,10 @@ readGenoFile(global & G, ofstream & LOG)
                                             bestModelString = line.str();
                                             bestModel = (-2 * nullLikelihood(COPYpheno));
                                         }*/
-                                       // cout << setprecision(4) << test << " " << Pmodel << " "
-                                       // << LR.Cstat->get(3) << " " << LR.SECstat->get(3) << " " << P1 << " "
-                                       // << LR.Cstat->get(1) << " " << LR.SECstat->get(2) << " " << P2 << " "
-                                       // << LR.Cstat->get(2) << " " << LR.SECstat->get(2) << " " << P3 << "\n" ;
+                                       	// cout << setprecision(4) << test << " " << Pmodel << " "
+                                       	// << LR.Cstat->get(3) << " " << LR.SECstat->get(3) << " " << P1 << " "
+                                       	// << LR.Cstat->get(1) << " " << LR.SECstat->get(2) << " " << P2 << " "
+                                       	// << LR.Cstat->get(2) << " " << LR.SECstat->get(2) << " " << P3 << "\n" ;
                                     }
                                     else
                                     {
@@ -1563,7 +1498,8 @@ readGenoFile(global & G, ofstream & LOG)
                                         LOG << endl;
                                     }
 
-                                } catch (ArgException &e)  // catch any exceptions
+                                }
+																catch (ArgException &e)  // catch any exceptions
                                 { cerr << "error: " << e.error() << " for linear model " << e.argId() << endl; }
                                 delete X;
                                 delete Y;
