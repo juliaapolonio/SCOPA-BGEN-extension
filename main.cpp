@@ -40,6 +40,7 @@
 #include <stdexcept>
 #include <memory>
 
+// SOURCE: BGEN Library API (https://enkre.net/cgi-bin/code/bgen/)
 #include "MissingValue.cpp"
 #include "zlib.cpp"
 #include "bgen.cpp"
@@ -495,6 +496,7 @@ readGenoFile(global & G, ofstream & LOG)
 {
     ofstream OUT (G.outputResult.c_str());
     ofstream BETAS (G.outputBetas.c_str());
+
     if (!G.printCovariance)
     OUT << "Chromosome\tPosition\tMarkerName\tEffectAllele\tOtherAllele\tInfoScore\tHWE\tMAF\tN\tAA\tAB\tBB\tPhenotypeCount\tMask\tLogLikelihood\tnullLogLikelihood\tLikelihoodRatio\tP-value\tBIC\tBICnull\tModel\tsortedModel\n";
     else
@@ -513,7 +515,8 @@ readGenoFile(global & G, ofstream & LOG)
 		// READING BGEN FILE
 		if (G.inputGenFile.substr(G.inputGenFile.length()-4)=="bgen")
 		{
-			try{
+			try
+			{
 				string const filename = G.inputGenFile;
 				BgenParser bgenParser(filename) ;
 
@@ -541,27 +544,17 @@ readGenoFile(global & G, ofstream & LOG)
 					// POSITION, MARKER
 					int pos =  (int) position;
 					string markerName = rsid;
-					std::cout << chr << ' ' << rsid << ' ' << position << ' '; // To be removed
 					if (G.debugMode) cout << "Pos: " << position << "\nmarker:" << rsid;
 
 					// EFFECT & NON-EFFECT ALLELES
-					// To be removed
-					assert( alleles.size() > 0 ) ;
-					std::cout << alleles[0] << ' ' ;
-					for( std::size_t i = 1; i < alleles.size(); ++i ) {
-						std::cout << alleles[i] ;
-					}
-
-					// Debug mode
 					string effectAllele;
 					string nonEffectAllele;
-					if (alleles.size() == 2){
+					if (alleles.size() == 2) // By default
+					{
 						effectAllele = alleles[1];
 						nonEffectAllele = alleles[0];
 					}
 					if (G.debugMode) cout << "\nea/nea:" << effectAllele <<"/" << nonEffectAllele<<"\n";
-
-					// bgenParser.ignore_probs();
 
 					// PROBABILITIES
 					// Initialise variables
@@ -575,57 +568,59 @@ readGenoFile(global & G, ofstream & LOG)
 					string bestBetasString = "";
 					double fijeij = 0; //for infoscore
 					double infoscore = 1;
-					double gen2_pb_val = 0; double gen_pb_val = 0;
 					double eij = 0; double fij = 0;
 
-					// CALL RATE
 					// Read probability
-					bgenParser.read_probs( &probs );
-					// size_t j = 0;
+					bgenParser.read_probs(&probs);
+
 					for (size_t i = 0; i < probs.size(); ++i)
 					{
-							//granvil copypaste
-							if(probs[i][0]+probs[i][1]+probs[i][2] == 1){
+							// granvil copypaste, adapted for BGEN
+							if(probs[i][0]+probs[i][1]+probs[i][2] == 1) // Check that probability values are valid
+							{
+								// Add genotype counts
 								aa+=probs[i][0];
 								aA+=probs[i][1];
 								AA+=probs[i][2];
 
+								// Add probabilities of each allele
 								gen2.push_back((((probs[i][2])*2) + (probs[i][1])));
 								gen.push_back(((probs[i][0]*2) + (probs[i][1])));
 
+								// To calculate call rate
 								ok_gen++;
 
+								// To calculate info score
 								double eij=(2*(probs[i][2])) + (probs[i][1]);
 								double fij = (4*(probs[i][2])) + (probs[i][1]);
 								fijeij+= fij - (eij*eij);
 
 							}
-							else{
+							else
+							{
+								// To calculate call rate
 								not_ok_gen++;
 							}
 					}
-					cout << "aa: " << aa << " aA: "<< aA << " AA: " << AA << endl;
 
 					if (ok_gen+not_ok_gen!=G.samples.size())
 					{
 							cout << "The number of samples in genotype file (" << ok_gen+not_ok_gen << ") does not match the number of samples in sample file (" << G.samples.size() << "). Exit program!" << endl;
 							exit (1);
 					}
+
+					// CALL RATE
 					callrate = ok_gen/(ok_gen+not_ok_gen);
 					if (G.debugMode)cout<<"Callrate: "<< callrate <<endl;
-
-					// Print to check, to be removed
-					cout << "aa: " << aa << " aA: " << aA << " AA: " << AA;
-					cout << "\n";
 
 					// MAF - MINOR ALLELE FREQUENCY
 					double maf = 0;
 					if (aa+aA+AA>0)
 					{
 							maf = ((2*aa)+aA)/(2*(aa+aA+AA));
-
 					}
-					cout << "MAF: " << maf << endl;
+
+					// INFO SCORE
 					if (maf==0){infoscore=1;}
 					//info score calculation according to the measure in snptest:
 					//https://mathgen.stats.ox.ac.uk/genetics_software/snptest/snptest.v2.pdf
@@ -634,6 +629,7 @@ readGenoFile(global & G, ofstream & LOG)
 							infoscore = 1-(fijeij/(2*(aa+aA+AA)*maf*(1-maf)));
 					}
 
+					// Update major & minor allele based on MAF
 					bool firstIsMajorAllele = false;
 					if (maf>0.5)
 					{
@@ -644,27 +640,25 @@ readGenoFile(global & G, ofstream & LOG)
 								nonEffectAllele = alleles[1];
 							}
 					}
-					// To be removed
-					cout<<"MAF: "<< maf <<endl;
-					// Debug mode, keep
 					if (G.debugMode)cout<<"MAF: "<< maf <<endl;
 
 					if (maf>0) //marker is ok - Sham'st thou to show thy dangerous brow by night, When evils are most free?
 					{
-								// INFO SCORE
+								// INFO SCORE (may be redundant)
 								infoscore = 1-(fijeij/(2*(aa+aA+AA)*maf*(1-maf)));
 
 								if (infoscore >= G.threshold)
 								{
+										// CREATE MAIN MATRIX
 										unsigned int _rows = probs.size();
 										unsigned int _cols = (unsigned int) G.phenoList.size()+1;
 										if (G.debugMode)cout << "Mainmatrix x: " << _rows << " y: " <<  _cols << endl;
-
-										cout << "Mainmatrix x: " << _rows << " y: " <<  _cols << endl;
-
 										matrixD _mainmatrix(_rows, _cols); //[0]-Y(0,1,2,3); [1]-.. X1,X2,X3...
 										int curind=0;
-										for (int i = 0; i < probs.size(); i++) // For each sample (triplet of probabilities)
+
+										// FILL MAIN MATRIX
+										// For each sample (triplet of probabilities)
+										for (int i = 0; i < probs.size(); i++)
 										{
 											if( probs[i][j] == -1 ) {}
 											else{
@@ -689,20 +683,16 @@ readGenoFile(global & G, ofstream & LOG)
 												curind++;
 
 										}
-									_mainmatrix.print();
 
 									//We have main table now - lets run through all possible combinations of phenotypes
 									//if (G.debugMode)_mainmatrix.print();
-									int _testcount = pow(2,G.phenoList.size());
-									cout << "TEST COUNT: " << _testcount << endl;
+
+									int _testcount = pow(2,G.phenoList.size()); // Number of tests is 2 to the power of phenotypes being tested
 									for (int test=_testcount-1; test>=1; test--)
 									{
 										int _phenoCount = 0;
 										int _sampleCount = 0;
 										vector<bool> phenoMask = phenoMasker(test,(int)G.phenoList.size());
-
-										cout << "PHENO COUNT: " << _phenoCount << endl;
-										cout << "SAMPLE COUNT: " << _sampleCount << endl;
 
 										if (G.debugMode)cout << "Current mask: ";
 										for (int i = 0; i < phenoMask.size(); i++)
@@ -715,9 +705,6 @@ readGenoFile(global & G, ofstream & LOG)
 												else{if (G.debugMode)cout<<"0";}
 										}
 										if (G.debugMode)cout << endl;
-
-										cout << "PHENO COUNT: " << _phenoCount << endl;
-										cout << "SAMPLE COUNT: " << _sampleCount << endl;
 
 										for (int i = 0; i<_mainmatrix.getRows(); i++)
 										{
@@ -741,53 +728,14 @@ readGenoFile(global & G, ofstream & LOG)
 												if (indISOK)_sampleCount++;
 										}
 										if (G.debugMode)cout << "test: " << test << " indcount: " << _sampleCount << " phenocount: " <<   _phenoCount << endl;
-										cout << "test: " << test << " indcount: " << _sampleCount << " phenocount: " <<   _phenoCount << endl; // Same up until here
 
-										// arrayD *Y = new arrayD ( _sampleCount );
-										// matrixD *X = new matrixD ( _sampleCount, _phenoCount+1);
-										// arrayD *W = new arrayD ( _sampleCount );
-										// int curInd = 0;
-										// vector <double> COPYpheno;
-										//
-										// for (int i = 0; i<_mainmatrix.getRows(); i++)
-										// {
-										// 		bool indISOK = true;
-										// 		if (_mainmatrix.get(i,0)==-9999){indISOK=false;}
-										// 		for (int j = 1; j<_mainmatrix.getCols(); j++)
-										// 		{
-										// 				if (phenoMask[j-1]){
-										// 						//if (i==0)_phenoCount++;
-										// 						if (_mainmatrix.get(i,j)==-9999){indISOK=false;}
-										// 				}
-										// 		}
-										// 		if (indISOK)
-										// 		{
-										// 				int z=1;
-										//
-										// 				//genotype
-										// 				Y->put(curInd, _mainmatrix.get(i,0));
-										// 				COPYpheno.push_back(_mainmatrix.get(i,0));
-										//
-										// 				W->put(curInd,1);
-										// 				X->put(curInd, 0,  1.0);
-										//
-										// 				for (int j = 1; j<_mainmatrix.getCols(); j++)
-										// 				{
-										// 						if (phenoMask[j-1])
-										// 						{
-										// 								X->put(curInd, z, _mainmatrix.get(i,j));
-										// 								z++;
-										// 						}
-										// 				}
-										// 				curInd++;
-										// 		}
-										// }
-
+										// CREATE NEW MATRICES
 										arrayD *Y = new arrayD ( _sampleCount );
 										matrixD *X = new matrixD ( _sampleCount, _phenoCount+1);
 										arrayD *W = new arrayD ( _sampleCount );
 										int curInd = 0;
 										vector <double> COPYpheno;
+
 										for (int i = 0; i<_mainmatrix.getRows(); i++)
 										{
 												bool indISOK = true;
@@ -824,9 +772,7 @@ readGenoFile(global & G, ofstream & LOG)
 
 										}
 
-										// for (int xxx=0; xxx<COPYpheno.size(); xxx++)cout<< COPYpheno[xxx];
-										//    cout <<endl; // Same up until here
-
+										// LINEAR REGRESSION
 										lr LR;
 										try
 										{
@@ -852,7 +798,6 @@ readGenoFile(global & G, ofstream & LOG)
 												double likelihoodRatio = 2 * (testLogLikelihood - nullLogLikelihood);
 												double _BIC = (-2 * testLogLikelihood) + ((_phenoCount+1) * log(_sampleCount));
 												double _BICnull = (-2 *nullLogLikelihood) + (log(_sampleCount));
-
 												double _pModel;
 												if (ddabs(likelihoodRatio)>0){_pModel = 1-chisquaredistribution(_phenoCount,ddabs(likelihoodRatio));}
 												else {_pModel = NAN;}
@@ -983,7 +928,6 @@ readGenoFile(global & G, ofstream & LOG)
 															}
 													}
 												}
-
 											}
 
 											else
@@ -1001,7 +945,6 @@ readGenoFile(global & G, ofstream & LOG)
 										delete Y;
 										delete W;
 										if (G.printComplex){break;}
-
 									}
 
 									if (!G.printAll && !G.printComplex)
@@ -1009,7 +952,6 @@ readGenoFile(global & G, ofstream & LOG)
 											if (G.printBetas)BETAS << bestBetasString;
 											OUT << bestModelString;
 									}
-
 								}
 					} //maf > 0 end (i think)
 				}
@@ -1649,9 +1591,12 @@ readGenoFile(global & G, ofstream & LOG)
                                 }
                                 curind++;
                             }
+
+														// MAIN MATRIX READY FOR ANALYSIS
                             //We have main table now - lets run through all possible combinations of phenotypes
                             //if (G.debugMode)_mainmatrix.print();
-                            int _testcount = pow(2,G.phenoList.size());
+
+                            int _testcount = pow(2,G.phenoList.size()); //
                             for (int test=_testcount-1; test>=1; test--)
                             {
                                 int _phenoCount = 0;
