@@ -8,6 +8,8 @@ This project aims to adapt SCOPA to support the BGEN format (https://www.well.ox
 
 ## To be updated
 ### Download
+The code can be downloaded with `git clone https://github.com/jiaq8877/SCOPA-BGEN-extension.git` 
+OR the zipped version can be downloaded and unzipped.
 ### Installation
 To compile SCOPA program, use command: 
 `make` 
