@@ -9,6 +9,12 @@ This project aims to adapt SCOPA to support the BGEN format (https://www.well.ox
 ## To be updated
 ### Download
 ### Installation
+To compile SCOPA program, use command: 
+`make` 
+
+in the folder where files have been unpacked. The program can be run by typing: 
+`./SCOPA
+`
 ### Input files
 ### SCOPA options
 ### SCOPA output columns
