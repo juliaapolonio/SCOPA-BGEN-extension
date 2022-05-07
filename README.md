@@ -21,15 +21,15 @@ in the folder where files have been unpacked. The program can be run by typing:
 SCOPA requires specification of input files - a genotype file (either BGEN or GEN) and a phenotype file (SAMPLE).
 
 ### Command line options
-`./SCOPA  [--debug] [--print_covariance] [--print_complex] [--betas]
-
+            ./SCOPA  [--debug] [--print_covariance] [--print_complex] [--betas]
+            
             [--print_all] [--remove_missing] --pheno_name <string> ... 
 
             [--imp_threshold <double>] [--missing_phenotype <string>] [-e
 
             <string>] -o <string> -g <string> [--chr <int>] -s <string>
 
-            [--] [--version] [-h]`
+            [--] [--version] [-h]
 Where: 
 `   --debug
 `        Debug mode on (default OFF)
@@ -99,7 +99,7 @@ Displays usage information and exits
            
 ## To Be Updated
 ### SCOPA output columns
-1     Chromosome - chromosome of variant if set with --chr option. Otherwise 0 (Specification only required for GEN genotype input file)
+1     Chromosome - chromosome of variant if set with --chr option. Otherwise 0
 
 2     Position - position of variant
 
