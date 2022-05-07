@@ -1,0 +1,17 @@
+###################
+# SCOPA v.1.0.14
+###################
+
+Using following command line options:
+Genotype file: SAMPLE_SCOPA_INPUT_FILES/cohort1_0X.gen
+Sample file: SAMPLE_SCOPA_INPUT_FILES/cohort1.sample
+Phenotypes: pheno1 pheno2 (2)
+Use all availabe phenotype data (remove_missing OFF)
+Output result file: res1.result
+Output log file: res1.log
+Output betas file: res1.betas
+Print only best model (print_all OFF)
+Imputation quality threshold: 0
+Sample file contained all: 2 phenotypes
+Sample file contained: 500 samples
+Analysis finished

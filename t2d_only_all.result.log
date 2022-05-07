@@ -1,0 +1,17 @@
+###################
+# SCOPA v.1.0.14
+###################
+
+Using following command line options:
+Genotype file: t2d_only_all.bgen
+Sample file: screened_snps_t2d_panc_pheno.sample
+Phenotypes: T2D.all bmi age panc (4)
+Use all availabe phenotype data (remove_missing OFF)
+Output result file: t2d_only_all.result.result
+Output log file: t2d_only_all.result.log
+Output betas file: t2d_only_all.result.betas
+Print only best model (print_all OFF)
+Imputation quality threshold: 0
+Sample file contained all: 4 phenotypes
+Sample file contained: 487409 samples
+Analysis finished
