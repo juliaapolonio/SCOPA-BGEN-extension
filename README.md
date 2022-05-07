@@ -36,8 +36,67 @@ Where:
 `        Debug mode on (default OFF)
         
 `   --print_covariance`        
-Print covariance matrix data for the model with all phenotypes. This is necessary for METASCOPA and can only be used with "--print_complex" option
-        (default OFF)
+Print covariance matrix data for the model with all phenotypes. This is necessary for METASCOPA and can only be used with "`--print_complex`" option (default OFF)
 
+`   --print_complex
+`
+Print only the model with all phenotypes. These ful models can be meta-analysed with METASCOPA (default OFF)
+
+`   --betas
+`
+Print each phenotype's effect size and stderr info of all selected models into separate output file (default OFF)
+
+`   --print_all
+`
+Print out all models (default OFF)
+
+`   --remove_missing
+`
+Remove sample if any of the phenotype values is missing. This is necessary if you want to compare models based on BIC scores (default OFF)
+
+`   --pheno_name <string>  (accepted multiple times)
+`
+**(required)**  Name of phenotype to use (use this command multiple times i.e. --pheno_name BMI --pheno_name HEIGHT etc.)
+
+`   --imp_threshold <double>
+`
+Imputation quality threshold (default 0)
+
+`   --missing_phenotype <string>
+`
+This specifies missing data value (default NA)
+
+`   -e <string>,  --exclusion <string>
+`
+This specifies marker exclusion list
+
+`   -o <string>,  --out <string>
+`
+**(required)**  This specifies output root
+
+`   -g <string>,  --gen <string>
+`
+**(required)**  This specifies genotype file.
+
+`   --chr <int>
+`
+This specifies chromosome to be printed into chromosome column
+
+`   -s <string>,  --sample <string>
+`
+**(required)** This specifies sample file
+
+`   --,  --ignore_rest
+`
+Ignores the rest of the labeled arguments following this flag
+
+`   --version
+`
+Displays version information and exits
+
+`   -h,  --help
+`
+Displays usage information and exits
+            
 ### SCOPA output columns
   
