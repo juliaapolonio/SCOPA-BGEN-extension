@@ -20,7 +20,6 @@ in the folder where files have been unpacked. The program can be run by typing:
 ### Input files
 SCOPA requires specification of input files - a genotype file (either BGEN or GEN) and a phenotype file (SAMPLE).
 
-## To Be Updated
 ### Command line options
 `./SCOPA  [--debug] [--print_covariance] [--print_complex] [--betas]
 
@@ -97,6 +96,73 @@ Displays version information and exits
 `   -h,  --help
 `
 Displays usage information and exits
-            
+           
+## To Be Updated
 ### SCOPA output columns
-  
+1     Chromosome - chromosome of variant if set with --chr option. Otherwise 0 (Specification only required for GEN genotype input file)
+
+2     Position - position of variant
+
+3     MarkerName - variant name
+
+4     EffectAllele - effect allele (necessary for meta-analysis)
+
+5     OtherAllele - non-effect allele (necessary for meta-analysis)
+
+6     InfoScore -  Imputation quality measurement calculated similarly to IMPUTE2
+
+7     HWE - p-value for HWE
+
+8     MAF - minor allele frequency
+
+9     N - samplesize
+
+10    AA - genotype counts from imputed data
+
+11    AB - genotype counts from imputed data
+
+12    BB - genotype counts from imputed data
+
+13    PhenotypeCount - number of phenotypes in model
+
+14    Mask - binary mask showing the phenotypes used in current model (1-usd, 0-unused)
+
+15    LogLikelihood - model likelihood
+
+16    nullLogLikelihood - null model likelihood
+
+17    LikelihoodRatio - likelyhood ratio
+
+18    P-value - model p-value
+
+19    BIC - Bayesian information score
+
+20    BICnull - Bayesan iformation score for null model
+
+21    Model - phenotypes in the order they were used in model (important for selecting covariance matrix for meta-analysis)
+
+22    sortedModel - phenotypes in model in alphabetical order
+
+23    beta_1 - effect size for phenotype 1
+
+24    se_1 - stderr of effect for phenotype 1
+
+25    beta_2 - effect size for phenotype 2
+
+26    se_2 - stderr of effect for phenotype 2
+
+27    beta_3 - effect size for phenotype 3
+
+28    se_3 - stderr of effect for phenotype 3
+
+29    cov_1_1 - inverted covariance matrix values
+
+30    cov_1_2 - inverted covariance matrix values
+
+31    cov_1_3 - inverted covariance matrix values
+
+32    cov_2_2 - inverted covariance matrix values
+
+33    cov_2_3 - inverted covariance matrix values
+
+34    cov_3_3 - inverted covariance matrix values
