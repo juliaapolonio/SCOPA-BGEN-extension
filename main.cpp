@@ -27,13 +27,13 @@
 #include <map>
 
 #include <zlib.h>
-#include "CmdLine.h"
 #include "global.h"
-#include "tools.h"
-#include "structures.h"
-#include "regression.h"
-#include "studenttdistr.h"
-#include "chisquaredistr.h"
+#include "TCLAP/CmdLine.h"
+#include "TOOLS/tools.h"
+#include "TOOLS/structures.h"
+#include "TOOLS/regression.h"
+#include "ALGLIB/studenttdistr.h"
+#include "ALGLIB/chisquaredistr.h"
 
 #include <fstream>
 #include <cassert>
@@ -41,9 +41,9 @@
 #include <memory>
 
 // SOURCE: BGEN Library API (https://enkre.net/cgi-bin/code/bgen/)
-#include "MissingValue.cpp"
-#include "zlib.cpp"
-#include "bgen.cpp"
+#include "BGEN/MissingValue.cpp"
+#include "BGEN/zlib.cpp"
+#include "BGEN/bgen.cpp"
 
 #define LENS 1000000
 using namespace TCLAP;
