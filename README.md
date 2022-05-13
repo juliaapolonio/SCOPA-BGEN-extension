@@ -1,6 +1,6 @@
 ## SCOPA (Software for COrrelated Phenotype Analysis)
 ### Overview
-SCOPA (Software for COrrelated Phenotype Analysis) is a software that implements the reverse regression model to perform GWAS analysis of multiple correlated phenotypes. The mathematical model and its example usage is documented in the paper [SCOPA and META-SCOPA: software for the analysis and aggregation of genome-wide association studies of multiple correlated phenotypes](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-016-1437-3). Further installation instructions and documentation can be found [here](https://genomics.ut.ee/en/tools). 
+Developed by Mägi et al., SCOPA (Software for COrrelated Phenotype Analysis) is a software that implements the reverse regression model to perform GWAS analysis of multiple correlated phenotypes. The mathematical model and its example usage is documented in the paper [SCOPA and META-SCOPA: software for the analysis and aggregation of genome-wide association studies of multiple correlated phenotypes](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-016-1437-3). Further installation instructions and documentation can be found [here](https://genomics.ut.ee/en/tools). 
 
 ### BGEN Implementation
 This project aims to adapt SCOPA to support the [BGEN format](https://www.well.ox.ac.uk/~gav/bgen_format/) to make use of the data from the UK Biobank (BGEN v1.2). It is primarily written in C++ and utilises files from the ALGLIB, TCLAP and BGEN libraries. 
