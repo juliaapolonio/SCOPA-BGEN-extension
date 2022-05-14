@@ -983,11 +983,13 @@ readGenoFile(global & G, ofstream & LOG)
                 {
 					// CHROMOSOME (token 0)
                     int chr;
-                    if (uc(tokens[0].c_str())=="MT") chr=26;
-                    else if (uc(tokens[0].c_str())=="XY") chr=25;
-                    else if (uc(tokens[0].c_str())=="X" or "0X") chr=23;
-                    else if (uc(tokens[0].c_str())=="Y" or "0Y") chr=24;
+                  
+                  if (uc(tokens[0])=="MT") chr=26;
+                    else if (uc(tokens[0])=="XY") chr=25;
+                    else if (uc(tokens[0])=="Y") chr=24;
+                    else if (uc(tokens[0])=="X") chr=23;
                     else chr = atoi(tokens[0].c_str());
+                    if (G.chr)chr=G.chr;
 
                     if (G.chr)chr=G.chr;
                     if (G.debugMode) cout << "Chromosome id: " << chr;
