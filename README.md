@@ -17,7 +17,7 @@ in the folder where files have been unpacked. The program can be run by typing:
 `./SCOPA
 `
 ### Input files
-SCOPA requires specification of input files - a genotype file (either BGEN or GEN) and a phenotype file (SAMPLE). Genotype file can be gzipped, if it has *.gz extension.
+SCOPA requires specification of input files - a genotype file (BGEN) and a phenotype file (SAMPLE).
 
 ### Command line options
             ./SCOPA  [--debug] [--print_covariance] [--print_complex] [--betas]
