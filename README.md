@@ -155,3 +155,4 @@ This software is distributed for academic use only. For other licensing, please 
 ## Contact
 
 For issues or contributions, please open an [issue](https://github.com/jiaq8877/SCOPA-BGEN-extension/issues) or reach out to the original developers.
+
