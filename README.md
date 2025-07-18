@@ -43,7 +43,7 @@ The project uses:
 - [**TCLAP**](http://tclap.sourceforge.net/) for command-line argument parsing.
 - [**ALGLIB**](https://www.alglib.net/) for matrix operations and statistics.
 
-These dependencies are already in the cloned repository. Make sure headers and compiled libraries of the above are accessible during compilation (`make`).
+These dependencies are already in the cloned repository and the Docker image. Make sure headers and compiled libraries of the above are accessible during compilation (`make`).
 
 ---
 
