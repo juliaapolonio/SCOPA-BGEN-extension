@@ -464,7 +464,7 @@ readSampleFile(global & G, ofstream & LOG)
                         isOK=false;
                         for (int i = 0; i < phenoColumns.size(); i++){_phenos[i]=-9999;}
                     }
-                    sample _S;
+                    ::sample _S;
                     _S._name=_name;
                     _S._phenos = _phenos;
                     _S.isOK = isOK;
