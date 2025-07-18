@@ -1,166 +1,157 @@
-## SCOPA (Software for COrrelated Phenotype Analysis)
-### Overview
-Developed by Mägi et al., SCOPA (Software for COrrelated Phenotype Analysis) is a software that implements the reverse regression model to perform GWAS analysis of multiple correlated phenotypes. The mathematical model and its example usage is documented in the paper [SCOPA and META-SCOPA: software for the analysis and aggregation of genome-wide association studies of multiple correlated phenotypes](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-016-1437-3). Further installation instructions and documentation can be found [here](https://genomics.ut.ee/en/tools). 
+# SCOPA (Software for COrrelated Phenotype Analysis) – BGEN Extension
 
-### BGEN Implementation
-This project aims to adapt SCOPA to support the [BGEN format](https://www.well.ox.ac.uk/~gav/bgen_format/) to make use of the data from the UK Biobank (BGEN v1.2). It is primarily written in C++ and utilises files from the ALGLIB, TCLAP and BGEN libraries. 
+SCOPA is a GWAS tool designed for the joint analysis of multiple correlated phenotypes using a reverse regression model. This repository extends SCOPA with support for the (BGEN format)[https://www.well.ox.ac.uk/~gav/bgen_format/], enabling the analysis of large-scale biobank data such as the **UK Biobank**.
 
-## Instructions
-### Download
-The code can be downloaded with `git clone https://github.com/jiaq8877/SCOPA-BGEN-extension.git`
-Alternatively, the zipped version can be downloaded and unzipped.
-### Installation
-To compile SCOPA program, use command: 
-`make` 
+Developed by Mägi *et al.*, the original method and application are detailed in the publication:
 
-in the folder where files have been unpacked. The program can be run by typing: 
-`./SCOPA
-`
-### Input files
-SCOPA requires specification of input files - a genotype file (BGEN) and a phenotype file (SAMPLE).
+> [Mägi et al. (2017). SCOPA and META-SCOPA: software for the analysis and aggregation of genome-wide association studies of multiple correlated phenotypes.](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-016-1437-3)
 
-### Command line options
-            ./SCOPA  [--debug] [--print_covariance] [--print_complex] [--betas]
-            
-            [--print_all] [--remove_missing] --pheno_name <string> ... 
+---
 
-            [--imp_threshold <double>] [--missing_phenotype <string>] [-e
+## Features
 
-            <string>] -o <string> -g <string> [--chr <int>] -s <string>
+- Reverse regression model for correlated phenotypes.
+- Efficient parsing of **BGEN v1.2 genotype files**.
+- Compatible with **UK Biobank** data.
+- Support for meta-analysis via **META-SCOPA**.
+- Outputs full likelihood model details and inverted covariance matrix.
 
-            [--] [--version] [-h]
-Where: 
-`   --debug
-`        Debug mode on (default OFF)
-        
-`   --print_covariance`        
-Print covariance matrix data for the model with all phenotypes. This is necessary for METASCOPA and can only be used with "`--print_complex`" option (default OFF)
+---
 
-`   --print_complex
-`
-Print only the model with all phenotypes. These ful models can be meta-analysed with METASCOPA (default OFF)
+## Installation
 
-`   --betas
-`
-Print each phenotype's effect size and stderr info of all selected models into separate output file (default OFF)
+Clone this repository and compile the code:
 
-`   --print_all
-`
-Print out all models (default OFF)
+```bash
+git clone https://github.com/jiaq8877/SCOPA-BGEN-extension.git
+cd SCOPA-BGEN-extension
+make
+```
 
-`   --remove_missing
-`
-Remove sample if any of the phenotype values is missing. This is necessary if you want to compare models based on BIC scores (default OFF)
+---
 
-`   --pheno_name <string>  (accepted multiple times)
-`
-**(required)**  Name of phenotype to use (use this command multiple times i.e. --pheno_name BMI --pheno_name HEIGHT etc.)
+## Dependencies
 
-`   --imp_threshold <double>
-`
-Imputation quality threshold (default 0)
+The project uses:
 
-`   --missing_phenotype <string>
-`
-This specifies missing data value (default NA)
+- [**BGEN**](https://github.com/biobank-uk/BGEN) library for genotype parsing.
+- [**TCLAP**](http://tclap.sourceforge.net/) for command-line argument parsing.
+- [**ALGLIB**](https://www.alglib.net/) for matrix operations and statistics.
 
-`   -e <string>,  --exclusion <string>
-`
-This specifies marker exclusion list
+These dependencies are already in the cloned repository. Make sure headers and compiled libraries of the above are accessible during compilation (`make`).
 
-`   -o <string>,  --out <string>
-`
-**(required)**  This specifies output root
+---
 
-`   -g <string>,  --gen <string>
-`
-**(required)**  This specifies genotype file.
+## Input Files
 
-`   --chr <int>
-`
-This specifies chromosome to be printed into chromosome column
+- `--gen` / `-g` : Genotype file in **BGEN v1.2** format
+- `--sample` / `-s` : Phenotype/sample file in plain text format
 
-`   -s <string>,  --sample <string>
-`
-**(required)** This specifies sample file
+---
 
-`   --,  --ignore_rest
-`
-Ignores the rest of the labeled arguments following this flag
+## Basic Usage
 
-`   --version
-`
-Displays version information and exits
+```bash
+./SCOPA \
+  --pheno_name <phenotype_1> \
+  --pheno_name <phenotype_2> \
+  -g data/genotypes.bgen \
+  -s data/phenotypes.sample \
+  -o results/output_prefix
+```
 
-`   -h,  --help
-`
-Displays usage information and exits
-           
-### SCOPA output columns
-1     Chromosome - chromosome of variant if set with --chr option. Otherwise 0
+---
 
-2     Position - position of variant
+### Common Options
 
-3     MarkerName - variant name
+| Option | Description |
+|--------|-------------|
+| `--pheno_name` | **Required** String. Phenotype(s) to include. Use multiple times for multivariate models |
+| `-o, --out` | **Required** String. Specifies output directory |
+| `-g, --gen` | **Required** String. Specifies genotype file |
+| `-s, --sample` | **Required** String. Specifies sample file |
+| `-e, --exclusion` | String. Specifies marker exclusion list |
+| `--chr` | Integer. Specifies chromosome to be printed into chromosome column |
+| `--missing_phenotype` | String. Specifies missing data value (default is NA) |
+| `--remove_missing` | Binary. Removes samples with missing phenotype(s) (default is off) |
+| `--imp_threshold` | Double. Minimum INFO score for imputed genotypes |
+| `--betas` | Binary. Outputs per-phenotype betas and SEs (default is off) |
+| `--print_complex` | Binary. Outputs full model with all phenotypes for META-SCOPA (default is off) |
+| `--print_covariance` | Binary. Outputs covariance matrix (requires `--print_complex`; default is off) |
+| `--print_all` | Binary. Print out all modes (default is off) |
+| `--, --ignore_rest` | Binary. Ignores the arguments following this flag |
+| `--debug` | Binary, enable debug mode (default is off) |
+| `--version` | Binary. Displays version information and exits |
+| `-h, --help` | binary. Displays usage information and exits | 
 
-4     EffectAllele - effect allele (necessary for meta-analysis)
+Run `./SCOPA --help` for full list of options.
 
-5     OtherAllele - non-effect allele (necessary for meta-analysis)
+---
 
-6     InfoScore -  Imputation quality measurement calculated similarly to IMPUTE2
+## Output
 
-7     HWE - p-value for HWE
+The main output is a tab-delimited file with the following columns:
 
-8     MAF - minor allele frequency
+| Column | Description |
+|--------|-------------|
+| Chromosome | Chromosome of variant |
+| Position | Position of variant |
+| MarkerName | Variant name |
+| EffectAllele | Effect allele (for meta-analysis)  |
+| OtherAllele | Other allele (for meta-analysis) |
+| InfoScore | Imputation quality measurement |
+| HWE | p-value for HWE |
+| MAF | minor allele frequency |
+| N | Sample size |
+| AA | Genotype counts from imputed data |
+| AB | Genotype counts from imputed data |
+| BB | Genotype counts from imputed data |
+| PhenotypeCount | Number of phenotypes in model |
+| Mask | Binary mask showing the phenotypes used in current model (1-used, 0-unused) |
+| LogLikelihood | Model likelihood |
+| nullLogLikelihood | null model likelihood |
+| LikelihoodRatio | Likelyhood ratio |
+| P-value | GWAS association p-value |
+| BIC | Bayesian information score |
+| BICnull | Bayesan iformation score for null model |
+| Model | Phenotypes in the order they were used in model |
+| sortedModel | phenotypes in model in alphabetical order |
+| beta_* | Effect sizes |
+| se_* | Standard errors |
+| cov_\*_* | Inverted covariance matrix values |
 
-9     N - samplesize
+You can check for sample outputs in `SAMPLE_SCOPA_OUTPUT`
 
-10    AA - genotype counts from imputed data
+## Example Dataset
 
-11    AB - genotype counts from imputed data
+Example command with dummy files:
 
-12    BB - genotype counts from imputed data
+```bash
+./SCOPA \
+  --pheno_name cohort1 \
+  -g SAMPLE_SCOPA_INPUT_FILES/cohort1_0X.bgen \
+  -s SAMPLE_SCOPA_INPUT_FILES/cohort1.sample \
+  -o example_results/output
+```
 
-13    PhenotypeCount - number of phenotypes in model
+---
 
-14    Mask - binary mask showing the phenotypes used in current model (1-usd, 0-unused)
+## Reference
 
-15    LogLikelihood - model likelihood
+If you use SCOPA in your research, please cite:
 
-16    nullLogLikelihood - null model likelihood
+- **Mägi, R. et al. (2017)** SCOPA and META-SCOPA: software for the analysis and aggregation of genome-wide association studies of multiple correlated phenotypes. *Bioinformatics*, 33(15), 2314–2316. https://doi.org/10.1093/bioinformatics/btx153
 
-17    LikelihoodRatio - likelyhood ratio
+- **Lagou, V. et al. (2025)** SCOPA software for analysis of correlated phenotypes identifies shared genetic loci between type 2 diabetes and colorectal cancer in the UK Biobank. *Under review*
 
-18    P-value - model p-value
+---
 
-19    BIC - Bayesian information score
+## License
 
-20    BICnull - Bayesan iformation score for null model
+This software is distributed for academic use only. For other licensing, please contact the repository maintainer.
 
-21    Model - phenotypes in the order they were used in model (important for selecting covariance matrix for meta-analysis)
+---
 
-22    sortedModel - phenotypes in model in alphabetical order
+## Contact
 
-23    beta_1 - effect size for phenotype 1
-
-24    se_1 - stderr of effect for phenotype 1
-
-25    beta_2 - effect size for phenotype 2
-
-26    se_2 - stderr of effect for phenotype 2
-
-27    beta_3 - effect size for phenotype 3
-
-28    se_3 - stderr of effect for phenotype 3
-
-29    cov_1_1 - inverted covariance matrix values
-
-30    cov_1_2 - inverted covariance matrix values
-
-31    cov_1_3 - inverted covariance matrix values
-
-32    cov_2_2 - inverted covariance matrix values
-
-33    cov_2_3 - inverted covariance matrix values
-
-34    cov_3_3 - inverted covariance matrix values
+For issues or contributions, please open an [issue](https://github.com/jiaq8877/SCOPA-BGEN-extension/issues) or reach out to the original developers.
