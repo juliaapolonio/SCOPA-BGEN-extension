@@ -28,6 +28,11 @@ cd SCOPA-BGEN-extension
 make
 ```
 
+Alternatively, you can run using Docker:
+```bash
+docker run --rm juliaapolonio/scopa-bgen:latest --help
+```
+
 ---
 
 ## Dependencies
