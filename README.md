@@ -128,10 +128,11 @@ Example command with dummy files:
 
 ```bash
 ./SCOPA \
-  --pheno_name cohort1 \
-  -g SAMPLE_SCOPA_INPUT_FILES/cohort1_0X.bgen \
-  -s SAMPLE_SCOPA_INPUT_FILES/cohort1.sample \
-  -o example_results/output
+--pheno_name pheno1 \
+--pheno_name pheno2 \
+-g SAMPLE_SCOPA_INPUT_FILES/cohort1_0X.bgen \
+-s SAMPLE_SCOPA_INPUT_FILES/cohort1.sample \
+-o $PWD/results
 ```
 
 ---
