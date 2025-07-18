@@ -23,7 +23,7 @@ Developed by Mägi *et al.*, the original method and application are detailed in
 Clone this repository and compile the code:
 
 ```bash
-git clone https://github.com/jiaq8877/SCOPA-BGEN-extension.git
+git clone https://github.com/juliaapolonio/SCOPA-BGEN-extension.git
 cd SCOPA-BGEN-extension
 make
 ```
